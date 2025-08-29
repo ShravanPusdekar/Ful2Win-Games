@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Egg Catcher</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="game-area" id="gameArea">
+    <div class="start-popup" id="startPopup">
+      <h1>Welcome to Egg Catcher!</h1><br />
+      <p>Catch eggs, avoid bombs!</p><br />
+      <button id="startBtn">Start Game</button>
+    </div>
+
+    <div class="top-info">
+      <div class="title">🥚 Egg Catcher</div><br /><br />
+      <div class="info">
+        <div><b>Score:</b> <span id="score">0</span></div>
+        <div><b>Time Left:</b> <span id="timer">60</span>s</div>
+      </div>
+    </div>
+
+    <div class="basket" id="basket"></div>
+    <input type="range" id="basketSlider" min="0" max="100" value="50">
+
+
+    <div class="result-popup" id="resultPopup">
+      <h2>Time's Up!</h2>
+      <h2>⏰</h2>
+      <p>Your Score: <span id="finalScore"></span></p>
+    </div>
+  </div>
+
+  <audio id="eggSound" src="egg.mp3"></audio>
+  <audio id="bombSound" src="bomb.mp3"></audio>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
