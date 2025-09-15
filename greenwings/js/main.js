@@ -326,14 +326,14 @@ mit.main = function() {
     try {
       // Send to parent with correct origin
       if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: "GAME_OVER", score: scoreToSend }, origin);
+        window.parent.postMessage({ type: "GAME_OVER", score: scoreToSend }, "*");
         console.log("PostMessage sent to parent with score:", scoreToSend, "origin:", origin);
       }
       
       // Also try sending to top window
      else if (window.top && window.top !== window) {
         window.top.postMessage({ type: "GAME_OVER", score: scoreToSend }, origin);
-        console.log("PostMessage sent to top with score:", scoreToSend, "origin:", origin);
+        console.log("PostMessage sent to top with score:", scoreToSend, "origin:", "*");
       } else {
 
       // Send with wildcard origin as fallback
