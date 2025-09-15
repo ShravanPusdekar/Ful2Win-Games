@@ -38,7 +38,7 @@ var ytResultBox = (function () {
   ? "http://localhost:5173"
   : "https://fulboost.fun";
 
-window.parent.postMessage({ type: "GAME_OVER", score: point }, origin);
+window.parent.postMessage({ type: "GAME_OVER", score: point }, "*");
 		var pointTxt = s.txtTemplate.clone();
 		pointTxt.size = 30;
 		pointTxt.text = point + " m";

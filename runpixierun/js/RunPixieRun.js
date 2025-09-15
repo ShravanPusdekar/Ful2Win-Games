@@ -582,7 +582,7 @@ function onGameover()
   ? "http://localhost:5173"
   : "https://fulboost.fun";
 
-window.parent.postMessage({ type: "GAME_OVER", score: game.score }, origin);
+window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*");
         console.log("Score: this run", game.score);
     } else {
         console.log("Score variable not found.");

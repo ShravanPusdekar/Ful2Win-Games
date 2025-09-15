@@ -1,14 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Egg Catcher</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
   <div class="game-area" id="gameArea">
     <div class="start-popup" id="startPopup">
@@ -26,8 +23,9 @@
     </div>
 
     <div class="basket" id="basket"></div>
-    <input type="range" id="basketSlider" min="0" max="100" value="50">
+    <input type="range" id="basketSlider" min="0" max="100" value="50" />
 
+    <div id="fallZoneIndicator" style="position:absolute; bottom:60px; height:10px; background:rgba(255,255,255,0.2); width:100%;"></div>
 
     <div class="result-popup" id="resultPopup">
       <h2>Time's Up!</h2>
@@ -41,5 +39,4 @@
 
   <script src="script.js"></script>
 </body>
-
 </html>

@@ -100,7 +100,7 @@ function CEndPanel(oSpriteBg){
   ? "http://localhost:5173"
   : "https://fulboost.fun";
 
-window.parent.postMessage({ type: "GAME_OVER", score: iScore }, origin);
+window.parent.postMessage({ type: "GAME_OVER", score: iScore }, "*");
         setVolume(s_oSoundtrack, 0)
 	_oGameOverSound = playSound("game_over",1,0);
         _oMsgTextStroke.text = TEXT_GAMEOVER;

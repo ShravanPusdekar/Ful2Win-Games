@@ -13,9 +13,6 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
   -ms-touch-action: none;
-}
-
-body {
   font-family: 'Segoe UI', sans-serif;
   background: url('background.jpg') no-repeat center center;
   background-size: cover;
@@ -36,6 +33,7 @@ body:-moz-full-screen {
   touch-action: none;
 }
 
+/* Top info styling */
 .top-info {
   position: absolute;
   top: 10px;
@@ -66,16 +64,15 @@ body:-moz-full-screen {
 }
 
 .basket {
+  position: absolute;
+  bottom: 60px; /* fixed from bottom */
   width: 160px;
   height: 110px;
   background: url('basket.png') no-repeat center/contain;
-  position: absolute;
-  bottom: 60px;
-  left: 50%;
-  transition: left 0.15s ease-in-out;
-  will-change: left;
+  z-index: 5;
 }
 
+/* Items styling */
 .item {
   width: 40px;
   height: 40px;
@@ -84,6 +81,7 @@ body:-moz-full-screen {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  z-index: 4;
 }
 
 .item.egg {
@@ -94,6 +92,7 @@ body:-moz-full-screen {
   background-image: url('bomb.png');
 }
 
+/* Popups styling */
 .start-popup, .result-popup {
   position: absolute;
   left: 50%;
@@ -117,6 +116,7 @@ body:-moz-full-screen {
   top: 40%;
 }
 
+/* Start button */
 #startBtn {
   background: linear-gradient(45deg, #43cea2, #185a9d);
   border: none;
@@ -132,33 +132,7 @@ body:-moz-full-screen {
   background: linear-gradient(45deg, #26c6da, #0288d1);
 }
 
-@media (max-width: 768px) {
-  .info {
-    font-size: 1rem;
-    flex-direction: column;
-    gap: 4px;
-    padding: 12px 20px;
-  }
-
-  .title {
-    font-size: 1.4rem;
-  }
-
-  .start-popup h1 {
-    font-size: 1.4rem;
-  }
-
-  #startBtn {
-    padding: 10px 20px;
-    font-size: 0.85rem;
-  }
-
-  .basket {
-    width: 120px;
-    height: 80px;
-  }
-}
-
+/* Slider styling */
 #basketSlider {
   position: absolute;
   bottom: 10px;
@@ -169,7 +143,6 @@ body:-moz-full-screen {
   border-radius: 8px;
   background: linear-gradient(90deg, #43cea2, #185a9d);
   outline: none;
-  -webkit-appearance: none;
   z-index: 20;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
@@ -215,4 +188,11 @@ body:-moz-full-screen {
 #basketSlider::-webkit-slider-thumb:hover,
 #basketSlider::-moz-range-thumb:hover {
   transform: scale(1.2);
+}
+
+/* Mobile-specific adjustments for slider length */
+@media (max-width: 600px) {
+  #basketSlider {
+    width: 80%; /* Increased width for better control on mobile */
+  }
 }

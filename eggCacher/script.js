@@ -15,51 +15,73 @@ let timeLeft = 60;
 let gameRunning = false;
 let items = [];
 let eggCount = 0;
-let keys = {};
-let isDragging = false;
-let startX = 0;
-let basketStartX = 0;
-let basketVelocity = 0;
-let targetLeft = null;
 let lastTime = 0;
 
-// Touch movement
-gameArea.addEventListener("touchstart", (e) => {
-  if (e.touches.length === 1) {
-    isDragging = true;
-    startX = e.touches[0].clientX;
-    basketStartX = parseFloat(getComputedStyle(basket).left) || basket.offsetLeft;
+// Initialize basket position to the left edge
+basket.style.position = 'absolute';
+basket.style.left = '0px';
+
+// Function to update basket position based on slider
+function updateBasketPositionFromSlider() {
+  const sliderWidth = basketSlider.offsetWidth;
+  const basketWidth = basket.offsetWidth;
+  const gameAreaWidth = gameArea.clientWidth;
+
+  // The slider's thumb position is based on the range's value
+  const thumbPosition = (parseInt(basketSlider.value) / 100) * sliderWidth;
+
+  // The horizontal offset of the slider from the left edge of the game area
+  const sliderOffset = (gameAreaWidth - sliderWidth) / 2;
+
+  // Calculate the basket's new position
+  // Center the basket by subtracting half its width from the thumb's position
+  let newLeft = (sliderOffset + thumbPosition) - (basketWidth / 2);
+
+  // Clamp the position to keep the basket within the game area
+  newLeft = Math.max(0, Math.min(newLeft, gameAreaWidth - basketWidth));
+
+  basket.style.left = `${newLeft}px`;
+}
+
+// Function to update slider based on basket position
+function updateSliderFromBasket() {
+  const basketWidth = basket.offsetWidth;
+  const sliderWidth = basketSlider.offsetWidth;
+  const gameAreaWidth = gameArea.clientWidth;
+
+  // The offset of the basket's center from the left edge of the game area
+  const basketCenter = parseFloat(basket.style.left) + (basketWidth / 2);
+
+  // The offset of the slider's track from the left edge of the game area
+  const sliderOffset = (gameAreaWidth - sliderWidth) / 2;
+
+  // Calculate the thumb's new position relative to the slider's track
+  const newThumbPosition = basketCenter - sliderOffset;
+
+  // Convert the thumb's position to a percentage value for the slider
+  const percent = (newThumbPosition / sliderWidth) * 100;
+
+  // Prevent unnecessary updates
+  if (Math.abs(basketSlider.value - percent) > 0.1) {
+    basketSlider.value = percent;
   }
+}
+
+// Initialize basket position
+updateBasketPositionFromSlider();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  // After resize, ensure basket stays within bounds
+  updateBasketPositionFromSlider();
 });
 
-gameArea.addEventListener("touchmove", (e) => {
-  if (!isDragging) return;
-  const touchX = e.touches[0].clientX;
-  const deltaX = touchX - startX;
-  let newLeft = basketStartX + deltaX;
-  const maxLeft = gameArea.clientWidth - basket.offsetWidth;
-  newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-  basket.style.left = `${newLeft}px`;
-  updateSliderFromBasket();
-});
-
-gameArea.addEventListener("touchend", () => {
-  isDragging = false;
-});
-
-// Slider movement
+// Slider input moves basket
 basketSlider.addEventListener("input", () => {
-  const percent = parseInt(basketSlider.value);
-  const maxLeft = gameArea.clientWidth - basket.offsetWidth;
-  const newLeft = (percent / 100) * maxLeft;
-  basket.style.left = `${newLeft}px`;
+  updateBasketPositionFromSlider();
 });
 
-// Keyboard input
-document.addEventListener('keydown', (e) => keys[e.key] = true);
-document.addEventListener('keyup', (e) => keys[e.key] = false);
-
-// Start Game Button
+// Start game button
 startBtn.addEventListener('click', () => {
   startPopup.style.display = 'none';
   resultPopup.style.display = 'none';
@@ -69,29 +91,57 @@ startBtn.addEventListener('click', () => {
   eggCount = 0;
   scoreDisplay.textContent = score;
   timerDisplay.textContent = timeLeft;
-  basket.style.backgroundImage = "url('basket.png')";
-  basket.style.left = `${(gameArea.clientWidth - basket.offsetWidth) / 2}px`;
-  updateSliderFromBasket();
+
+  // Reset basket position
+  updateBasketPositionFromSlider();
+
+  // Remove existing items
   items.forEach(i => i.el.remove());
   items = [];
+
   startGame();
 });
 
-function updateSliderFromBasket() {
-  const maxLeft = gameArea.clientWidth - basket.offsetWidth;
-  const currentLeft = parseFloat(basket.style.left) || 0;
-  const percent = (currentLeft / maxLeft) * 100;
-  basketSlider.value = percent;
+// Function to spawn eggs or bombs
+function spawnItem() {
+  const item = document.createElement('div');
+  item.classList.add('item');
+  const isEgg = Math.random() > 0.3;
+  item.classList.add(isEgg ? 'egg' : 'bomb');
+  item.dataset.type = isEgg ? 'egg' : 'bomb';
+
+  // Calculate the horizontal spawning range to match the basket's movement
+  const itemWidth = item.offsetWidth || 40;
+  const sliderWidth = basketSlider.offsetWidth;
+  const gameAreaWidth = gameArea.clientWidth;
+  const sliderOffset = (gameAreaWidth - sliderWidth) / 2;
+
+  const spawnZoneStart = sliderOffset;
+  const spawnZoneEnd = sliderOffset + sliderWidth;
+  const spawnRange = spawnZoneEnd - spawnZoneStart;
+  
+  // Spawn randomly within the defined range
+  let spawnLeft = Math.random() * (spawnRange - itemWidth);
+  spawnLeft = spawnLeft + spawnZoneStart;
+
+  // Apply the new position
+  item.style.left = `${spawnLeft}px`;
+  item.style.top = `-20px`; // start above view
+  gameArea.appendChild(item);
+  items.push({ el: item, top: 0 });
 }
 
+// Main game start
 function startGame() {
   countdown();
   spawnLoop();
   requestAnimationFrame(updateLoop);
 }
 
+// Countdown timer
 function countdown() {
   const timer = setInterval(() => {
+    if (!gameRunning) return;
     timeLeft--;
     timerDisplay.textContent = timeLeft;
     if (timeLeft <= 0) {
@@ -102,26 +152,16 @@ function countdown() {
   }, 1000);
 }
 
+// Periodic egg/bomb spawn
 function spawnLoop() {
   if (!gameRunning) return;
   spawnItem();
   setTimeout(spawnLoop, 800);
 }
 
-function spawnItem() {
-  const item = document.createElement('div');
-  item.classList.add('item');
-  const isEgg = Math.random() > 0.3;
-  item.classList.add(isEgg ? 'egg' : 'bomb');
-  item.dataset.type = isEgg ? 'egg' : 'bomb';
-  item.style.left = `${Math.random() * (gameArea.clientWidth - 40)}px`;
-  gameArea.appendChild(item);
-  items.push({ el: item, top: 0 });
-}
-
 function updateLoop(timestamp) {
   if (!lastTime) lastTime = timestamp;
-  const delta = (timestamp - lastTime) / 16; // normalize frame speed
+  const delta = (timestamp - lastTime) / 16; // normalize for 60fps
   lastTime = timestamp;
 
   if (gameRunning) requestAnimationFrame(updateLoop);
@@ -130,10 +170,19 @@ function updateLoop(timestamp) {
   updateItems(delta);
 }
 
+// Arrow key movement
+const keys = {};
+window.addEventListener('keydown', (e) => {
+  keys[e.key] = true;
+});
+window.addEventListener('keyup', (e) => {
+  keys[e.key] = false;
+});
+
 function moveWithKeys(delta) {
   const step = 12 * delta; 
   const maxLeft = gameArea.clientWidth - basket.offsetWidth;
-  let left = parseFloat(basket.style.left) || basket.offsetLeft;
+  let left = parseFloat(basket.style.left) || 0;
 
   if (keys['ArrowLeft']) {
     left = Math.max(0, left - step);
@@ -141,32 +190,42 @@ function moveWithKeys(delta) {
   if (keys['ArrowRight']) {
     left = Math.min(maxLeft, left + step);
   }
-
+  // Clamp position
+  left = Math.max(0, Math.min(left, maxLeft));
   basket.style.left = `${left}px`;
+
+  // sync slider
   updateSliderFromBasket();
 }
 
+// Update falling items
 function updateItems(delta) {
   const basketRect = basket.getBoundingClientRect();
   const fallSpeed = 4 * delta;
 
-  items.forEach((item, index) => {
+  for (let i = items.length - 1; i >= 0; i--) {
+    const item = items[i];
     item.top += fallSpeed;
     item.el.style.top = `${item.top}px`;
+
     const itemRect = item.el.getBoundingClientRect();
+    const basketLeft = parseFloat(basket.style.left) || 0;
+    const fallZoneLeft = basketLeft;
+    const fallZoneRight = fallZoneLeft + basket.offsetWidth;
 
     if (
       itemRect.bottom >= basketRect.top &&
-      itemRect.left < basketRect.right &&
-      itemRect.right > basketRect.left
+      itemRect.left < fallZoneRight &&
+      itemRect.right > fallZoneLeft
     ) {
       handleCollision(item);
-      items.splice(index, 1);
+      items.splice(i, 1);
     } else if (item.top > gameArea.clientHeight) {
+      // Remove if falls below
       item.el.remove();
-      items.splice(index, 1);
+      items.splice(i, 1);
     }
-  });
+  }
 }
 
 function handleCollision(item) {
@@ -182,16 +241,20 @@ function handleCollision(item) {
     bombSound.play();
   }
   scoreDisplay.textContent = score;
+  // Optional: change basket image
   basket.style.backgroundImage = eggCount >= 3 ? "url('basket-full.png')" : "url('basket.png')";
 }
 
 function showResult() {
-  finalScore.textContent = score;
-  resultPopup.style.display = 'block';
+  // Add a slight delay before showing the final result
+  setTimeout(() => {
+    finalScore.textContent = score;
+    resultPopup.style.display = 'block';
 
-  const origin = window.location.hostname.includes("localhost")
-    ? "http://localhost:5173"
-    : "https://fulboost.fun";
+    const origin = window.location.hostname.includes("localhost")
+      ? "http://localhost:5173"
+      : "https://fulboost.fun";
 
-  window.parent.postMessage({ type: "GAME_OVER", score: score }, origin);
+    window.parent.postMessage({ type: "GAME_OVER", score: score }, "*");
+  }, 500); // 500ms delay
 }
