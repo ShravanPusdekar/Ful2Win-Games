@@ -284,7 +284,7 @@ function endGame(reason) {
         ? "http://localhost:5173"
         : "https://fulboost.fun";
 
-    window.parent.postMessage({ type: "GAME_OVER", score: score }, origin);
+    window.parent.postMessage({ type: "GAME_OVER", score: score }, "*");
 }
 
 startButton.addEventListener("click", () => {
