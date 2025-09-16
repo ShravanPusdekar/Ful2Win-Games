@@ -256,5 +256,5 @@ function showResult() {
             : "https://fulboost.fun";
 
         window.parent.postMessage({ type: "GAME_OVER", score: score }, "*");
-    }, 500); // 500ms delay
+    },); // 500ms delay
 }
