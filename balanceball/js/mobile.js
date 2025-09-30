@@ -19,9 +19,10 @@ function checkMobileEvent(){
 			}, 1000);
 		});
 		
-		if (window.DeviceOrientationEvent) {
-			window.addEventListener('deviceorientation', onDeviceOrientation);
-		}
+		// Device orientation control removed - now using on-screen touch controls
+		// if (window.DeviceOrientationEvent) {
+		//     window.addEventListener('deviceorientation', onDeviceOrientation);
+		// }
 		checkMobileOrientation();
 	}
 }

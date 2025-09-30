@@ -1,14 +1,32 @@
 #home h1 { 
 	text-align: center;
-	font-size: 78px;
+	font-size: clamp(40px, 12vw, 78px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: nowrap;
+	gap: 0;
+	line-height: 1.2;
+	margin-top: clamp(20px, 5vh, 40px);
+	padding: 0 10px;
+	width: 100%;
+	box-sizing: border-box;
+}
+/* Hide gameplay UI elements on start screen */
+#home .pause-button,
+#home .sound,
+#home .help-button {
+	display: none !important;
 }
 #home h3 { 
-	position: absolute;
+	position: fixed;
 	margin: auto;
 	left: 0px;
 	right: 0px;
 	bottom: 15px;
 	text-align: center;
+	z-index: 1000;
+	display: none;
 }
 #home h3 em { 
 	font-size: inherit;
@@ -16,20 +34,24 @@
 	color: #fff200;
 }
 #canvas-home-title-pacman { 
-	background-color: #000;
-	position: absolute;
-	top: 10px;
-	left: 182px;
-	height: 100px;
-	width: 118px;
+	background-color: transparent;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: clamp(50px, 14vw, 90px);
+	width: clamp(50px, 14vw, 90px);
+	margin: 0 clamp(3px, 1vw, 8px);
+	flex-shrink: 0;
+	transform: translateY(clamp(3px, 0.8vh, 6px));
 }
 #canvas-panel-title-pacman { 
 	background-color: #000;
 	position: absolute;
-	top: 6px;
-	left: 47px;
-	height: 32px;
-	width: 38px;
+	top: clamp(4px, 1vh, 6px);
+	left: clamp(35px, 8vw, 47px);
+	height: clamp(25px, 5vh, 32px);
+	width: clamp(30px, 6vw, 38px);
 }
 
 #presentation { 
@@ -38,26 +60,27 @@
 	padding: 0px;
 	left: 0px;
 	right: 0px;
-	top: 200px;
-	width: 500px;
-	height: 250px;
+	top: clamp(150px, 25vh, 200px);
+	width: min(85vw, 500px);
+	height: clamp(200px, 35vh, 250px);
+	max-width: 500px;
 }
 #presentation-titles { 
 	position: absolute;
-	width: 360px;
-	height: 28px;
-	top: 10px;
-	left: 117px;
+	width: clamp(280px, 60vw, 360px);
+	height: clamp(22px, 4vh, 28px);
+	top: clamp(8px, 2vh, 10px);
+	left: clamp(90px, 20vw, 117px);
 	letter-spacing: 2px;
-	font-size: 20px;
+	font-size: clamp(16px, 3.5vw, 20px);
 	text-transform: uppercase;
 	color: #fff;
 }
 #canvas-presentation-blinky, #canvas-presentation-pinky, #canvas-presentation-inky, #canvas-presentation-clyde { 
 	position: absolute;
-	width: 50px;
-	height: 50px;
-	left: 35px;
+	width: clamp(35px, 8vw, 50px);
+	height: clamp(35px, 8vw, 50px);
+	left: clamp(25px, 6vw, 35px);
 }
 #canvas-presentation-blinky { 
 	top: 40px;
@@ -74,16 +97,16 @@
 #presentation-character-blinky, #presentation-character-pinky, #presentation-character-inky, #presentation-character-clyde, 
 #presentation-name-blinky, #presentation-name-pinky, #presentation-name-inky, #presentation-name-clyde { 
 	position: absolute;
-	width: 180px;
-	height: 28px;
-	left: 120px;
+	width: clamp(140px, 30vw, 180px);
+	height: clamp(22px, 4vh, 28px);
+	left: clamp(90px, 20vw, 120px);
 	letter-spacing: 2px;
-	font-size: 20px;
+	font-size: clamp(14px, 3vw, 20px);
 	text-transform: uppercase;
 }
 #presentation-name-blinky, #presentation-name-pinky, #presentation-name-inky, #presentation-name-clyde { 
-	left: 310px;
-	width: 180px;
+	left: clamp(240px, 50vw, 310px);
+	width: clamp(140px, 30vw, 180px);
 }
 #presentation-character-blinky, #presentation-name-blinky { 
 	top: 50px;
@@ -108,27 +131,193 @@
 	padding: 0px;
 	left: 0px;
 	right: 0px;
-	bottom: 100px;
-	width: 500px;
-	height: 50px;
+	bottom: clamp(80px, 12vh, 100px);
+	width: min(85vw, 500px);
+	height: clamp(40px, 7vh, 50px);
+	max-width: 500px;
 }
 
-@media screen and (min-height:1200px), screen and (min-device-height : 1200px) { 
-
-}
-
-@media screen and (max-width:1024px), screen and (min-device-width : 768px) and (max-device-width : 1024px) { 
-
+/* Tablets - iPad and similar (portrait and landscape) */
+@media screen and (max-width: 768px) {
+	#home h1 {
+		font-size: clamp(44px, 10vw, 60px);
+		padding: 0 8px;
+	}
 	
-	#canvas-panel-title-pacman { 
-		left: 49px;
-		width: 42px;
+	#canvas-home-title-pacman {
+		height: clamp(52px, 13vw, 72px);
+		width: clamp(52px, 13vw, 72px);
+		margin: 0 clamp(4px, 1.2vw, 7px);
+		transform: translateY(clamp(3px, 0.7vh, 5px));
+	}
+	
+	#canvas-panel-title-pacman {
+		left: 40px;
+		width: 32px;
+		height: 28px;
+	}
+	
+	#presentation {
+		width: 90%;
+		max-width: 450px;
+	}
+	
+	#presentation-titles {
+		width: 320px;
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: 16px;
+	}
+	
+	#canvas-presentation-blinky, #canvas-presentation-pinky, #canvas-presentation-inky, #canvas-presentation-clyde {
+		width: 40px;
+		height: 40px;
+		left: 20px;
+	}
+	
+	#presentation-character-blinky, #presentation-character-pinky, #presentation-character-inky, #presentation-character-clyde {
+		left: 70px;
+		width: 150px;
+		font-size: 16px;
+	}
+	
+	#presentation-name-blinky, #presentation-name-pinky, #presentation-name-inky, #presentation-name-clyde {
+		left: 240px;
+		width: 150px;
+		font-size: 16px;
+	}
+	
+	#trailer {
+		width: 90%;
+		max-width: 450px;
 	}
 }
 
-@media screen and (max-height:640px), screen and (min-device-height : 480px) and (max-device-height : 640px) and (-webkit-device-pixel-ratio: 3) { 
-
+/* Mobile phones */
+@media screen and (max-width: 500px) {
+	#home h1 {
+		font-size: 36px;
+		margin-bottom: 10px;
+		margin-top: 15px;
+		padding: 0 5px;
+	}
+	
+	#canvas-home-title-pacman {
+		height: 44px;
+		width: 44px;
+		margin: 0 4px;
+		transform: translateY(3px);
+	}
+	
+	#canvas-panel-title-pacman {
+		left: 30px;
+		width: 28px;
+		height: 24px;
+	}
+	
+	#presentation {
+		width: 95%;
+		max-width: 380px;
+		height: auto;
+		min-height: 220px;
+	}
+	
+	#presentation-titles {
+		width: 280px;
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: 14px;
+	}
+	
+	#canvas-presentation-blinky, #canvas-presentation-pinky, #canvas-presentation-inky, #canvas-presentation-clyde {
+		width: 35px;
+		height: 35px;
+		left: 15px;
+	}
+	
+	#presentation-character-blinky, #presentation-character-pinky, #presentation-character-inky, #presentation-character-clyde {
+		left: 60px;
+		width: 120px;
+		font-size: 14px;
+	}
+	
+	#presentation-name-blinky, #presentation-name-pinky, #presentation-name-inky, #presentation-name-clyde {
+		left: 200px;
+		width: 120px;
+		font-size: 14px;
+	}
+	
+	#trailer {
+		width: 95%;
+		max-width: 380px;
+		height: 40px;
+	}
+	
+	#home h3 {
+		font-size: 14px;
+		bottom: 10px;
+	}
 }
-@media screen and (max-height:480px), screen and (min-device-height : 320px) and (max-device-height : 480px) { 
 
+/* Very small mobile phones */
+@media screen and (max-width: 360px) {
+	#home h1 {
+		font-size: 28px;
+		margin-bottom: 8px;
+		margin-top: 12px;
+		padding: 0 3px;
+	}
+	
+	#canvas-home-title-pacman {
+		height: 36px;
+		width: 36px;
+		margin: 0 3px;
+		transform: translateY(2px);
+	}
+	
+	#canvas-panel-title-pacman {
+		left: 25px;
+		width: 24px;
+		height: 20px;
+	}
+	
+	#presentation {
+		width: 98%;
+		max-width: 320px;
+		min-height: 200px;
+	}
+	
+	#presentation-titles {
+		width: 240px;
+		font-size: 12px;
+	}
+	
+	#canvas-presentation-blinky, #canvas-presentation-pinky, #canvas-presentation-inky, #canvas-presentation-clyde {
+		width: 30px;
+		height: 30px;
+		left: 10px;
+	}
+	
+	#presentation-character-blinky, #presentation-character-pinky, #presentation-character-inky, #presentation-character-clyde {
+		left: 50px;
+		width: 100px;
+		font-size: 12px;
+	}
+	
+	#presentation-name-blinky, #presentation-name-pinky, #presentation-name-inky, #presentation-name-clyde {
+		left: 170px;
+		width: 100px;
+		font-size: 12px;
+	}
+	
+	#trailer {
+		width: 98%;
+		max-width: 320px;
+		height: 35px;
+	}
+	
+	#home h3 {
+		font-size: 12px;
+		bottom: 8px;
+	}
 }

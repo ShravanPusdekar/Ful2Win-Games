@@ -47,13 +47,14 @@ function checkBrowser(){
 	  browserSupport=true;
 	}
 	
+	// Since we're using on-screen touch controls instead of device orientation,
+	// we don't need to wait for orientation events anymore
 	if($.browser.mobile || isTablet){
-		if(window.DeviceOrientationEvent) {
-			browserSupport=false;
-			window.addEventListener('deviceorientation', onDeviceOrientationLoad);
-		}else{
-			browserSupport=false;
-		}
+		// Browser supports canvas, so it's compatible
+		// Start the game immediately
+		setTimeout(function() {
+			startPage();
+		}, 500);
 	}else{
 		setTimeout(function() {
 			startPage();
@@ -84,9 +85,10 @@ function startPage(){
 /*!
  * 
  * DEVICE ORIENTATION DETECTION - This is the function that runs for mobile orientation detection
- * 
+ * DISABLED - Now using on-screen touch controls instead
  */
 function onDeviceOrientationLoad(event){
-	if(event.gamma != null) browserSupport=true;
-	startPage();
+	// No longer needed - using on-screen touch controls
+	// if(event.gamma != null) browserSupport=true;
+	// startPage();
 }

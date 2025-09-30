@@ -74,13 +74,39 @@
 							}
 						} else { 
 							$('#help').fadeOut("slow");
-							$(".help-button").show();
 						}
 					}
 				});
 				
 				$(".github").click(function(e) { 
 					e.stopPropagation();
+				});
+				
+				// Pause/Unpause button handler
+				$(".pause-button").click(function(e) { 
+					e.stopPropagation();
+					if (!PACMAN_DEAD && !LOCK && !GAMEOVER && !HOME) { 
+						if (PAUSE) { 
+							resumeGame();
+							$(this).attr("data-state", "play");
+							$(this).attr("title", "Pause");
+							$(this).find(".pause-icon").text("||");
+						} else { 
+							pauseGame();
+							$(this).attr("data-state", "pause");
+							$(this).attr("title", "Resume");
+						}
+					}
+				});
+				
+				// Help screen close button handler
+				$(".help-close").click(function(e) { 
+					e.stopPropagation();
+					$('#help').fadeOut("slow");
+					$(".help-button").show();
+					if (PAUSE && $("#panel").css("display") !== "none") { 
+						resumeGame();
+					}
 				});
 				
 				initHome();
@@ -175,6 +201,7 @@
 		<div id="sound"></div>
 	
 		<div id="help">
+			<a class="help-close" href="javascript:void(0);" title="Close">✕</a>
 			<h2>Help</h2>
 			<table align="center" border="0" cellPadding="2" cellSpacing="0">
 				<tbody>
@@ -189,9 +216,8 @@
 		</div>
 	
 		<div id="home">
-			<h1>pac-man</h1>
-			<h3>Bang Doan<br><em>2016</em></h3>
-			<canvas id="canvas-home-title-pacman"></canvas>
+			<h1>pa<canvas id="canvas-home-title-pacman"></canvas>-man</h1>
+			<h3 style="display: none;">Bang Doan<br><em>2016</em></h3>
 			<div id="presentation">
 				<div id="presentation-titles">character &nbsp;/&nbsp; nickname</div>
 				<canvas id="canvas-presentation-blinky"></canvas><div id="presentation-character-blinky">- shadow</div><div id="presentation-name-blinky">"blinky"</div>
@@ -201,6 +227,7 @@
 			</div>
 			<canvas id="trailer"></canvas>
 			<div class="help-button">- help -</div>
+			<a class="pause-button" href="javascript:void(0);" data-state="play" title="Pause"><span class="pause-icon">||</span></a>
 			<a class="sound" href="javascript:void(0);" data-sound="on"><img src="img/sound-on.png" alt="" border="0"></a>
 			</div>
 	
@@ -236,6 +263,7 @@
 			<canvas id="canvas-level-fruits"></canvas>
 			<div id="message"></div>
 			<div class="help-button">- help -</div>
+			<a class="pause-button" href="javascript:void(0);" data-state="play" title="Pause"><span class="pause-icon">||</span></a>
 			<a class="sound" href="javascript:void(0);" data-sound="on"><img src="img/sound-on.png" alt="" border="0"></a>
 		</div>
 	

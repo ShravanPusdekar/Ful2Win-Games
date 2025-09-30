@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Touch Controls Test</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0A1529;
+            overflow: hidden;
+        }
+        #testCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a2a3a;
+        }
+        #status {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-family: 'pixellife', monospace, Arial;
+            font-size: 14px;
+            z-index: 2000;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border: 3px solid #34495E;
+            text-align: center;
+        }
+        #player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: #4CAF50;
+            border: 3px solid #2ECC71;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">
+        <div><strong>Touch Controls Test</strong></div>
+        <div id="leftStatus">Left: Not Pressed</div>
+        <div id="rightStatus">Right: Not Pressed</div>
+        <div id="jumpStatus">Jump: Not Pressed</div>
+        <div id="posStatus">Position: 0</div>
+    </div>
+
+    <div id="testCanvas">
+        <div id="player"></div>
+    </div>
+    
+    <!-- Touch Controls - Fixed Position -->
+    <div id="touchControls" class="touch-controls" style="display: block;">
+        <div id="dpadContainer" class="dpad-container">
+            <div class="dpad-base">
+                <button id="btnLeft" class="dpad-btn dpad-left">
+                    <span>◄</span>
+                </button>
+                <button id="btnRight" class="dpad-btn dpad-right">
+                    <span>►</span>
+                </button>
+            </div>
+        </div>
+        
+        <div id="jumpContainer" class="jump-container">
+            <button id="btnJump" class="jump-btn">
+                <span>JUMP</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script>
+        var leftPressed = false;
+        var rightPressed = false;
+        var playerX = 384; // Center of 768px
+        var moveSpeed = 8;
+
+        // Setup controls
+        var btnLeft = document.getElementById('btnLeft');
+        var btnRight = document.getElementById('btnRight');
+        var btnJump = document.getElementById('btnJump');
+        var player = document.getElementById('player');
+
+        // Left button
+        btnLeft.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            leftPressed = true;
+            document.getElementById('leftStatus').textContent = 'Left: PRESSED';
+            document.getElementById('leftStatus').style.color = '#4CAF50';
+        });
+        btnLeft.addEventListener('mouseup', function(e) {
+            e.preventDefault();
+            leftPressed = false;
+            document.getElementById('leftStatus').textContent = 'Left: Not Pressed';
+            document.getElementById('leftStatus').style.color = '#fff';
+        });
+        btnLeft.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            leftPressed = true;
+            document.getElementById('leftStatus').textContent = 'Left: PRESSED';
+            document.getElementById('leftStatus').style.color = '#4CAF50';
+        });
+        btnLeft.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            leftPressed = false;
+            document.getElementById('leftStatus').textContent = 'Left: Not Pressed';
+            document.getElementById('leftStatus').style.color = '#fff';
+        });
+
+        // Right button
+        btnRight.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            rightPressed = true;
+            document.getElementById('rightStatus').textContent = 'Right: PRESSED';
+            document.getElementById('rightStatus').style.color = '#4CAF50';
+        });
+        btnRight.addEventListener('mouseup', function(e) {
+            e.preventDefault();
+            rightPressed = false;
+            document.getElementById('rightStatus').textContent = 'Right: Not Pressed';
+            document.getElementById('rightStatus').style.color = '#fff';
+        });
+        btnRight.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            rightPressed = true;
+            document.getElementById('rightStatus').textContent = 'Right: PRESSED';
+            document.getElementById('rightStatus').style.color = '#4CAF50';
+        });
+        btnRight.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            rightPressed = false;
+            document.getElementById('rightStatus').textContent = 'Right: Not Pressed';
+            document.getElementById('rightStatus').style.color = '#fff';
+        });
+
+        // Jump button
+        btnJump.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            document.getElementById('jumpStatus').textContent = 'Jump: PRESSED!';
+            document.getElementById('jumpStatus').style.color = '#FFC107';
+            setTimeout(function() {
+                document.getElementById('jumpStatus').textContent = 'Jump: Not Pressed';
+                document.getElementById('jumpStatus').style.color = '#fff';
+            }, 200);
+        });
+        btnJump.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            document.getElementById('jumpStatus').textContent = 'Jump: PRESSED!';
+            document.getElementById('jumpStatus').style.color = '#FFC107';
+            setTimeout(function() {
+                document.getElementById('jumpStatus').textContent = 'Jump: Not Pressed';
+                document.getElementById('jumpStatus').style.color = '#fff';
+            }, 200);
+        });
+
+        // Update loop
+        function update() {
+            if (leftPressed) {
+                playerX -= moveSpeed;
+            }
+            if (rightPressed) {
+                playerX += moveSpeed;
+            }
+
+            // Keep in bounds
+            playerX = Math.max(50, Math.min(718, playerX));
+
+            // Update player position
+            player.style.left = playerX + 'px';
+            document.getElementById('posStatus').textContent = 'Position: ' + Math.round(playerX);
+
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>

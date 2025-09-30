@@ -89,24 +89,8 @@ function buildGameButton(){
 }
 
 function buildInGameButton(){
-	stage.addEventListener("mousedown", function(evt) {
-		if(!gamePause){
-			if(playerJump==0){
-				playerJump=1;
-				jumpPlayer();
-			}else if(playerJump==2){
-				jumpPlayer();
-			}
-		}
-	 }); 
-	 
-	 if(!$.browser.mobile || !isTablet){
-		 stage.on("stagemousemove", function(evt) {
-			 if(!gamePause){
-				movePlayerPosX(gamePlayer.x=evt.stageX/scalePercent);
-			}
-		});
-	 }
+	// Mouse follow control removed - now using on-screen touch controls
+	// Jump functionality will be handled by on-screen jump button
  }
 
 /*!
@@ -123,10 +107,12 @@ function goPage(page){
 	switch(page){
 		case 'main':
 			mainContainer.visible=true;
+			hideTouchControls(); // Hide controls on main menu
 		break;
 		
 		case 'game':
 			gameContainer.visible=true;
+			showTouchControls(); // Show controls during gameplay
 		break;
 	}
 }
@@ -156,7 +142,8 @@ function goPage(page){
 	curLevelScoreCount=0;
 	curLevelBallCount=gameExtraBall;
 	curgameScoreTarget=gameScoreTarget;
-
+	
+	resetTouchControls(); // Reset touch control states
 	
 	goPage('game');
 	startGame();
@@ -185,6 +172,7 @@ function goPage(page){
 	  removeAllBall();
 	  toggleBox2dWorld(false);
 	  gamePlayer.gotoAndPlay('right');
+	  resetTouchControls(); // Reset touch control states on game over
 	  
 	  showResult();
  }
@@ -196,9 +184,14 @@ function goPage(page){
  */
  function showResult(){
 	playSound('soundFail',false);
-	scorePopTxt.visible=true;
+	// Hide score text and "BEST SCORE" text - show only orange box
+	scorePopTxt.visible=false;
+	resultTxt.visible=false;
 	bgOverlay.visible=bgPop.visible=true;
 	resultPopContainer.visible=true;
+	
+	// Hide on-screen controls when game over screen is shown
+	hideTouchControls();
 	
 	toggleShare(false);
  }
@@ -498,6 +491,7 @@ function updateGame(){
 			}
 		}
 		checkBallCollision();
+		updateTouchControls(); // Update touch controls movement
 		checkMovePlayerAnimation();
 		updateBox2dPlayerPos(gamePlayer.x, gamePlayer.y);
 	}	
@@ -582,13 +576,14 @@ function displayLife(){
 /*!
  * 
  * DEVICE ORIENTATION UPDATE - This is the function that runs update device orientation data
- * 
+ * DISABLED - Now using on-screen touch controls
  */
 function updateOrientation(data){
-	var oData=Math.round(data);
-	if(!gamePause){
-		movePlayerPosX((canvasW/2)+(oData/100*canvasW));
-	}
+	// Device orientation control disabled
+	// var oData=Math.round(data);
+	// if(!gamePause){
+	// 	movePlayerPosX((canvasW/2)+(oData/100*canvasW));
+	// }
 }
 
 /*!

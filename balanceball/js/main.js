@@ -23,6 +23,9 @@ function initMain(){
 	buildGameButton();
 	buildInGameButton();
 	
+	// Initialize touch controls
+	initTouchControls();
+	
 	goPage('main');
 	resizeCanvas();
 }

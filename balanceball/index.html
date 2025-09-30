@@ -59,6 +59,29 @@
             <div id="canvasHolder">
                 <canvas id="gameCanvas" width="768" height="1024"></canvas>
                 <canvas id="box2dCanvas" width="768" height="1024" style="display:none; pointer-events: none;"></canvas>
+                
+                <!-- ON-SCREEN TOUCH CONTROLS START -->
+                <div id="touchControls" class="touch-controls">
+                    <!-- D-Pad / Joystick Controls (Bottom Left) -->
+                    <div id="dpadContainer" class="dpad-container">
+                        <div class="dpad-base">
+                            <button id="btnLeft" class="dpad-btn dpad-left" aria-label="Move Left">
+                                <span>◄</span>
+                            </button>
+                            <button id="btnRight" class="dpad-btn dpad-right" aria-label="Move Right">
+                                <span>►</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Jump Button (Bottom Right) -->
+                    <div id="jumpContainer" class="jump-container">
+                        <button id="btnJump" class="jump-btn" aria-label="Jump">
+                            <span>JUMP</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- ON-SCREEN TOUCH CONTROLS END -->
             </div>
             <!-- CANVAS END-->
             
@@ -80,6 +103,7 @@
         <script src="js/game.js"></script>
         <script src="js/sound.js"></script>
         <script src="js/mobile.js"></script>
+        <script src="js/touchcontrols.js"></script>
         <script src="js/main.js"></script>
         <script src="js/loader.js"></script>
         <script src="js/init.js"></script>
