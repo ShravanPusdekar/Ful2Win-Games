@@ -77,13 +77,13 @@ const GAME_STATE = {
 };
 
 let game = {
-    state: GAME_STATE.START_SCREEN,
+    state: GAME_STATE.PLAYING,  // Start directly in playing state
     score: 0,
     active: true,
     level: 1,
     playerLives: 3,
     timeRemaining: 120,
-    currentSpeed: 1.5
+    currentSpeed: 0.8  // Reduced from 1.5 for better playability
 };
 
 // --- Game Objects (Classes) ---
@@ -270,7 +270,7 @@ class Grid {
         
         if (this.position.x + this.width >= canvas.width || this.position.x <= 0) {
             this.velocity.x = -this.velocity.x;
-            this.velocity.y = 20;
+            this.velocity.y = 8;  // Reduced from 20 - slower downward movement
         }
     }
 }
@@ -349,29 +349,48 @@ function showOverlay(title, message, buttonText, callback) {
     }
 }
 
-function showStartScreen() {
-    let overlay = document.querySelector('.overlay');
-    overlay.innerHTML = `
-        <h1>SPACE INVADERS</h1>
-        <p>Press Start to begin!</p>
-        <button id="startButton">START GAME</button>
-    `;
-    overlay.style.display = 'flex';
-    document.getElementById('startButton').onclick = () => {
-        enableAudio();
-        overlay.style.display = 'none';
-        startGame();
-    };
-}
+// Start screen removed - game begins immediately
+// Audio will be enabled on first user interaction (joystick or shoot button)
 
-function showGameOverScreen() {
+let gameEnded = false;  // Flag to ensure score is reported only once
+
+function endGame() {
+    if (gameEnded) return;  // Prevent multiple calls
+    
+    gameEnded = true;
+    game.state = GAME_STATE.GAME_OVER;
+    game.active = false;
     stopBackgroundMusic();
-    let overlay = document.querySelector('.overlay');
-    overlay.innerHTML = `
-        <h1>GAME OVER!</h1>
-        <p>Your Score: ${game.score}</p>
-    `;
-    overlay.style.display = 'flex';
+    
+    // Step 1: Hide HUD elements (Score, Lives, Time)
+    const scoreboard = document.querySelector('.scoreboard');
+    if (scoreboard) {
+        scoreboard.style.display = 'none';
+    }
+    
+    // Step 2: Apply blur effect to canvas
+    const canvas = document.getElementById('canvas');
+    canvas.style.filter = 'blur(5px)';
+    canvas.style.transition = 'filter 0.3s ease-in-out';
+    
+    // Step 3: Display "Better luck next time" message at the top
+    const overlay = document.querySelector('.overlay');
+    if (overlay) {
+        overlay.innerHTML = `
+            <h1 style="font-size: 2.5rem; color: #fff; text-shadow: 0 0 20px #fff, 0 0 30px #ff0000; margin: 0; animation: fadeIn 0.5s ease-in;">
+                Better luck next time
+            </h1>
+        `;
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'flex-start';  // Align to top
+        overlay.style.paddingTop = '80px';  // Position near top
+        overlay.style.background = 'rgba(0, 0, 0, 0.3)';  // Subtle overlay
+    }
+    
+    // Step 4: Report final score to parent window (executes exactly once)
+    window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*");
+    
+    // Game loop will stop automatically due to state check
 }
 
 // --- Game Logic Functions ---
@@ -387,7 +406,8 @@ function initGame() {
     game.level = 1;
     game.playerLives = 3;
     game.timeRemaining = 120;
-    game.currentSpeed = 1.5;
+    game.currentSpeed = 0.8;  // Starting speed - slow and manageable
+    gameEnded = false;  // Reset game ended flag
     
     scoreEl.innerHTML = `Score: 0 | Lives: 3`;
     updateTimerDisplay();
@@ -395,10 +415,34 @@ function initGame() {
     initBackgroundParticles();
     
     grids.push(new Grid(invaderImage));
+    
+    // Reset canvas blur and hide overlay on init
+    const canvas = document.getElementById('canvas');
+    canvas.style.filter = 'none';
+    
+    // Show HUD elements on game start
+    const scoreboard = document.querySelector('.scoreboard');
+    if (scoreboard) {
+        scoreboard.style.display = 'block';
+    }
+    
+    const overlay = document.querySelector('.overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.style.justifyContent = 'center';  // Reset to center for future use
+        overlay.style.paddingTop = '0';  // Reset padding
+    }
 }
 
 function startGame() {
     game.state = GAME_STATE.PLAYING;
+    
+    // Hide the overlay to show the game
+    const overlay = document.querySelector('.overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+    
     scoreEl.parentElement.style.display = 'block';
     startBackgroundMusic();
     animate();
@@ -428,29 +472,22 @@ function animate() {
         game.timeRemaining--;
         updateTimerDisplay();
 
-        // Speed increase logic based on timer
+        // Progressive difficulty: Speed increases gradually over time
         if (game.timeRemaining <= 90 && game.timeRemaining > 60) {
-            game.currentSpeed = 2.0;
+            game.currentSpeed = 1.2;  // Gentle increase at 30 seconds
         } else if (game.timeRemaining <= 60 && game.timeRemaining > 30) {
-            game.currentSpeed = 2.5;
+            game.currentSpeed = 1.6;  // Moderate increase at 60 seconds
         } else if (game.timeRemaining <= 30 && game.timeRemaining > 0) {
-            game.currentSpeed = 3.5;
+            game.currentSpeed = 2.0;  // Challenging but fair at 90 seconds
         } else if (game.timeRemaining <= 0) {
             game.state = GAME_STATE.GAME_OVER;
         }
     }
     
-    // Final descent and game over on timer end
+    // Timer runs out - end game immediately
     if (game.state === GAME_STATE.GAME_OVER && game.timeRemaining <= 0) {
-        grids.forEach(grid => {
-            grid.velocity.x = 0;
-            grid.velocity.y = 50; // Final straight-down rush
-        });
-        // Check for the invaders hitting the bottom and show game over screen
-        if (grids.some(grid => grid.invaders.some(invader => invader.position.y + invader.height >= canvas.height))) {
-            window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*");
-            showGameOverScreen();
-        }
+        endGame();
+        return;  // Stop animation loop
     }
 
     particles.forEach((particle, i) => {
@@ -487,12 +524,11 @@ function animate() {
                         player.resetPosition();
                     }, 500);
                 } else {
+                    // Player lost all lives - end game immediately
                     player.opacity = 0;
-                    game.active = false;
-                    game.state = GAME_STATE.GAME_OVER;
                     createParticles({ object: player, color: '#fff', fades: true });
-                    window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*");
-                    showGameOverScreen();
+                    endGame();
+                    return;  // Stop animation loop
                 }
             }, 0);
         }
@@ -513,10 +549,8 @@ function animate() {
 
         // Check for game over condition (invaders reach the bottom)
         if (grid.invaders.some(invader => invader.position.y + invader.height >= canvas.height - 150)) {
-            game.state = GAME_STATE.GAME_OVER;
-            window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*");
-            showGameOverScreen();
-            return;
+            endGame();
+            return;  // Stop animation loop
         }
 
         const shootInterval = Math.max(80 - game.level * 2, 20);
@@ -621,14 +655,56 @@ document.addEventListener('touchend', (e) => {
 
 shootBtn.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    if (game.state === GAME_STATE.START_SCREEN) {
-        enableAudio();
-        startGame();
-        return;
-    }
+    enableAudio();  // Enable audio on first interaction
     if (game.state !== GAME_STATE.PLAYING) return;
     fireProjectile();
 }, { passive: false });
+
+// --- Keyboard Controls for Desktop ---
+const keys = { left: false, right: false, space: false };
+
+window.addEventListener('keydown', (e) => {
+    enableAudio();  // Enable audio on first interaction
+    if (game.state !== GAME_STATE.PLAYING) return;
+    
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        keys.left = true;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        keys.right = true;
+    }
+    if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        keys.space = true;
+        fireProjectile();
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        keys.left = false;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        keys.right = false;
+    }
+    if (e.key === ' ' || e.key === 'Spacebar') {
+        keys.space = false;
+    }
+});
+
+// Update player velocity based on keyboard input
+setInterval(() => {
+    if (!player || game.state !== GAME_STATE.PLAYING) return;
+    
+    if (keys.left && !keys.right) {
+        player.velocity.x = -player.speed;
+    } else if (keys.right && !keys.left) {
+        player.velocity.x = player.speed;
+    } else if (!joystickActive) {
+        // Only reset velocity if joystick is not active (for mobile compatibility)
+        player.velocity.x = 0;
+    }
+}, 1000 / 60);
 
 window.onload = () => {
     Promise.all([
@@ -638,7 +714,7 @@ window.onload = () => {
         spaceshipImage = loadedImages[0];
         invaderImage = loadedImages[1];
         initGame();
-        showStartScreen();
+        startGame();  // Start game immediately after assets load
     }).catch(error => {
         console.error("Game failed to load assets:", error);
         document.body.innerHTML = `<div class="error-message" style="color:red; text-align:center; font-size:24px;">

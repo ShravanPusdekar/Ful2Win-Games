@@ -4,11 +4,14 @@ const scoreDisplay = document.getElementById('score');
 const timerDisplay = document.getElementById('timer');
 const startBtn = document.getElementById('startBtn');
 const startPopup = document.getElementById('startPopup');
-const resultPopup = document = document.getElementById('resultPopup');
+const resultPopup = document.getElementById('resultPopup');
 const finalScore = document.getElementById('finalScore');
 const eggSound = document.getElementById('eggSound');
 const bombSound = document.getElementById('bombSound');
 const basketSlider = document.getElementById('basketSlider');
+const loadingScreen = document.getElementById('loadingScreen');
+const loadingProgress = document.getElementById('loadingProgress');
+const loadingText = document.getElementById('loadingText');
 
 let score = 0;
 let timeLeft = 60;
@@ -16,6 +19,25 @@ let gameRunning = false;
 let items = [];
 let eggCount = 0;
 let lastTime = 0;
+let assetsLoaded = false;
+
+// Asset preloading configuration
+const ASSETS = {
+    images: [
+        'background.jpg',
+        'basket.png',
+        'basket-full.png',
+        'eggs.png',
+        'bomb.png'
+    ],
+    audio: [
+        'egg.mp3',
+        'bomb.mp3'
+    ]
+};
+
+// Preload all assets before game initialization
+preloadAssets();
 
 // Initialize basket position to the left edge
 basket.style.position = 'absolute';
@@ -67,13 +89,79 @@ function updateSliderFromBasket() {
     }
 }
 
-// Initialize basket position
-updateBasketPositionFromSlider();
+// Asset preloading function
+function preloadAssets() {
+    loadingScreen.style.display = 'flex';
+    
+    const totalAssets = ASSETS.images.length + ASSETS.audio.length;
+    let loadedAssets = 0;
+    
+    const updateProgress = () => {
+        loadedAssets++;
+        const progress = (loadedAssets / totalAssets) * 100;
+        loadingProgress.style.width = `${progress}%`;
+        loadingText.textContent = `Loading... ${Math.round(progress)}%`;
+        
+        if (loadedAssets === totalAssets) {
+            assetsLoaded = true;
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                initializeGame();
+            }, 500);
+        }
+    };
+    
+    // Preload images
+    ASSETS.images.forEach(src => {
+        const img = new Image();
+        img.onload = updateProgress;
+        img.onerror = () => {
+            console.warn(`Failed to load image: ${src}`);
+            updateProgress(); // Continue even if an asset fails
+        };
+        img.src = src;
+    });
+    
+    // Preload audio
+    ASSETS.audio.forEach(src => {
+        const audio = new Audio();
+        audio.oncanplaythrough = updateProgress;
+        audio.onerror = () => {
+            console.warn(`Failed to load audio: ${src}`);
+            updateProgress(); // Continue even if an asset fails
+        };
+        audio.src = src;
+    });
+}
+
+// Initialize game after assets are loaded
+function initializeGame() {
+    // Initialize basket position
+    updateBasketPositionFromSlider();
+    
+    // Auto-start the game immediately (no welcome screen)
+    startPopup.style.display = 'none';
+    resultPopup.style.display = 'none';
+    gameRunning = true;
+    score = 0;
+    timeLeft = 60;
+    eggCount = 0;
+    scoreDisplay.textContent = score;
+    timerDisplay.textContent = timeLeft;
+
+    // Remove existing items
+    items.forEach(i => i.el.remove());
+    items = [];
+
+    startGame();
+}
 
 // Handle window resize
 window.addEventListener('resize', () => {
-    // After resize, ensure basket stays within bounds
-    updateBasketPositionFromSlider();
+    if (assetsLoaded) {
+        // After resize, ensure basket stays within bounds
+        updateBasketPositionFromSlider();
+    }
 });
 
 // Slider input moves basket
@@ -81,10 +169,16 @@ basketSlider.addEventListener("input", () => {
     updateBasketPositionFromSlider();
 });
 
-// Start game button
+// Start game button (kept for potential manual restart, but not shown initially)
 startBtn.addEventListener('click', () => {
+    if (!assetsLoaded) {
+        alert('Please wait for assets to load!');
+        return;
+    }
+    
     startPopup.style.display = 'none';
     resultPopup.style.display = 'none';
+    gameArea.style.filter = 'none'; // Remove blur if restarting
     gameRunning = true;
     score = 0;
     timeLeft = 60;
@@ -198,10 +292,18 @@ function moveWithKeys(delta) {
     updateSliderFromBasket();
 }
 
-// Update falling items
+// Update falling items with precise collision detection
 function updateItems(delta) {
     const basketRect = basket.getBoundingClientRect();
     const fallSpeed = 4 * delta;
+    const basketWidth = basket.offsetWidth;
+    const basketLeft = parseFloat(basket.style.left) || 0;
+    
+    // Define the basket's catching area (inner rim)
+    // Adjust these values to fine-tune the catching zone
+    const rimInset = basketWidth * 0.15; // 15% inset from each side
+    const catchZoneLeft = basketLeft + rimInset;
+    const catchZoneRight = basketLeft + basketWidth - rimInset;
 
     for (let i = items.length - 1; i >= 0; i--) {
         const item = items[i];
@@ -209,15 +311,16 @@ function updateItems(delta) {
         item.el.style.top = `${item.top}px`;
 
         const itemRect = item.el.getBoundingClientRect();
-        const basketLeft = parseFloat(basket.style.left) || 0;
-        const fallZoneLeft = basketLeft;
-        const fallZoneRight = fallZoneLeft + basket.offsetWidth;
-
-        if (
-            itemRect.bottom >= basketRect.top &&
-            itemRect.left < fallZoneRight &&
-            itemRect.right > fallZoneLeft
-        ) {
+        
+        // Calculate the center point of the falling item
+        const itemCenterX = itemRect.left + (itemRect.width / 2) - gameArea.getBoundingClientRect().left;
+        const itemBottom = itemRect.bottom;
+        
+        // Check if item has reached the basket's vertical level
+        const atBasketLevel = itemBottom >= basketRect.top && itemBottom <= basketRect.bottom;
+        
+        // Precise collision: center of item must be within the catch zone
+        if (atBasketLevel && itemCenterX >= catchZoneLeft && itemCenterX <= catchZoneRight) {
             handleCollision(item);
             items.splice(i, 1);
         } else if (item.top > gameArea.clientHeight) {
@@ -246,15 +349,12 @@ function handleCollision(item) {
 }
 
 function showResult() {
-    // Add a slight delay before showing the final result
+    // Apply blur effect to the game area
+    gameArea.style.filter = 'blur(5px)';
+    gameArea.style.transition = 'filter 0.3s ease';
+    
+    // Send the final score to parent window
     setTimeout(() => {
-        finalScore.textContent = score;
-        resultPopup.style.display = 'block';
-
-        const origin = window.location.hostname.includes("localhost")
-            ? "http://localhost:5173"
-            : "https://fulboost.fun";
-
         window.parent.postMessage({ type: "GAME_OVER", score: score }, "*");
-    },); // 500ms delay
+    }, 300); // Small delay for blur effect
 }

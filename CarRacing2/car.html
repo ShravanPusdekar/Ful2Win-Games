@@ -77,46 +77,65 @@
             margin-bottom: 5px;
         }
 
-        #game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        #timer {
+            font-size: 1.2em;
+            color: #ffff00;
+            text-shadow: 2px 2px 4px black;
+        }
+
+        #timer.warning {
             color: #ff4444;
-            /* Bright red */
-            font-size: 4em;
-            /* Large text */
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Blur overlay for game over */
+        #game-over-blur {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        #game-over-message {
+            position: absolute;
+            top: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-size: 2.5em;
             font-weight: bold;
             text-align: center;
-            text-shadow: 2px 2px 5px black;
-            /* Stronger shadow */
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.8);
             display: none;
-            /* Hidden initially */
             z-index: 101;
-            /* Above everything else */
-            pointer-events: auto;
-            /* Enable clicks on restart button */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* Hide control buttons when game over */
+        .control-button.hidden {
+            display: none !important;
+        }
+
+        /* Old game over elements - now unused */
+        #game-over {
+            display: none !important;
         }
 
         #restart-button {
-            background-color: #21c60ffc;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.4em;
-            /* Relative to parent font-size */
-            cursor: pointer;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
-            transition: background-color 0.3s ease;
-        }
-
-        #restart-button:hover {
-            background-color: #0056b3;
+            display: none !important;
         }
 
 
@@ -163,6 +182,11 @@
             background-color: rgba(255, 255, 255, 0.5);
         }
 
+        /* Transition for control buttons */
+        .control-button {
+            transition: opacity 0.3s ease;
+        }
+
         #left-button {
             left: 20px;
             /* Position left button */
@@ -189,11 +213,16 @@
 
     <div id="ui-container">
         <div id="score">Score: 0</div>
+        <div id="timer">Time: 1:00</div>
     </div>
     <div id="game-over">
         GAME OVER!
         <button id="restart-button">Restart</button>
     </div>
+
+    <!-- New game over UI -->
+    <div id="game-over-blur"></div>
+    <div id="game-over-message">Better luck next time</div>
 
     <div id="left-button" class="control-button">◀</div>
     <div id="right-button" class="control-button">▶</div>
@@ -224,7 +253,8 @@
         const numBuildings = Math.floor(roadLength * 1.5 / buildingSpacing); // Spawn more buildings to cover recycle distance
         const numLights = Math.floor(roadLength * 1.5 / lightSpacing);
 
-        const driveSpeed = 0.5; // Scenery scroll speed (player's effective forward speed)
+        let driveSpeed = 0.5; // Scenery scroll speed (player's effective forward speed) - now dynamic
+        const baseDriveSpeed = 0.5; // Base speed for difficulty scaling
         const enemyCarSpeed = 0.6; // Enemy moves faster relative to scenery scroll
 
         const kerbHeight = 0.2;
@@ -233,24 +263,40 @@
         // --- Game State ---
         let moveLeft = false;
         let moveRight = false;
-        const carMoveSpeed = 0.25; // How fast the player car moves left/right
+        const carMoveSpeed = 0.25; // How fast the player car moves left/right (base speed)
+        let carTargetX = 0; // Target X position for smooth interpolation
         let carBaseY = 0; // Will be calculated based on car model bounding box
         let score = 0;
         let isGameOver = false;
+        let gameTime = 0; // Track game time for progressive difficulty
+        const speedIncreaseInterval = 30; // Increase speed every 30 seconds
+        const speedIncreaseAmount = 0.05; // Amount to increase speed
+        let lastSpeedIncrease = 0;
+        
+        // --- Timer Variables ---
+        let countdownTime = 60; // 60 seconds (1 minute)
+        let lastFrameTime = 0; // Track time for countdown
+        let accumulatedTime = 0; // Accumulate delta time
         // --- End Game State ---
 
         // --- Points ---
         const points = [];
-        const numPoints = 15;
+        const numPoints = 20; // Increased from 15 for more challenge
         const pointValue = 10;
         let pointGeometry, pointMaterial;
         const pointRadius = 0.3;
         // --- End Points ---
 
+        // --- Obstacles (Additional Enemy Cars) ---
+        const obstacles = [];
+        const numObstacles = 5; // Multiple obstacles to increase difficulty
+        // --- End Obstacles ---
+
         // --- UI Elements References ---
         const loadingScreen = document.getElementById('loading-screen');
         const loadingProgress = document.getElementById('loading-progress');
         const scoreElement = document.getElementById('score');
+        const timerElement = document.getElementById('timer');
         const gameOverElement = document.getElementById('game-over');
         const restartButton = document.getElementById('restart-button');
         // --- End UI Refs ---
@@ -259,6 +305,8 @@
         let playerBox = new THREE.Box3();
         let enemyBox = new THREE.Box3();
         let pointBox = new THREE.Box3();
+        // Debug helpers (uncomment to visualize hitboxes)
+        // let playerBoxHelper, enemyBoxHelper;
         // --- End Bounding Boxes ---
 
         const loadingManager = new THREE.LoadingManager();
@@ -269,8 +317,13 @@
             loadingScreen.classList.add('hidden');
             setTimeout(() => {
                 if (loadingScreen) loadingScreen.style.display = 'none';
+                // Initialize timer display
+                updateTimerDisplay();
+                console.log("Starting game with countdown:", countdownTime);
                 // Start game loop after loading screen fades
-                if (!isGameOver) animate(); // Ensure animate starts only once after loading
+                if (!isGameOver) {
+                    requestAnimationFrame(animate); // Use requestAnimationFrame to get proper timestamp
+                }
             }, 600);
         };
         loadingManager.onError = (url) => {
@@ -592,6 +645,37 @@
                 scene.add(enemyCar);
                 console.log("Enemy car added and colored blue");
 
+                // --- Create Additional Obstacles ---
+                for (let i = 0; i < numObstacles; i++) {
+                    const obstacle = carModel.clone();
+                    obstacle.traverse((node) => {
+                        if (node.isMesh) {
+                            const originalMaterial = node.material;
+                            const obstacleMaterial = originalMaterial.clone();
+                            // Vary colors: red, orange, purple, green, yellow
+                            const colors = [0xff0000, 0xff6600, 0x9900ff, 0x00ff00, 0xffff00];
+                            obstacleMaterial.color.setHex(colors[i % colors.length]);
+                            obstacleMaterial.metalness = 0.9;
+                            obstacleMaterial.roughness = 0.2;
+                            node.material = obstacleMaterial;
+                            node.castShadow = true;
+                            node.receiveShadow = true;
+                        }
+                    });
+                    // Spawn obstacles at different distances and lanes
+                    const lanes = [-roadWidth / 3, 0, roadWidth / 3];
+                    obstacle.position.set(
+                        lanes[Math.floor(Math.random() * lanes.length)],
+                        carBaseY,
+                        roadLength * 0.3 + i * (roadLength * 0.15)
+                    );
+                    obstacle.rotation.y = Math.PI;
+                    obstacle.userData.isObstacle = true;
+                    obstacles.push(obstacle);
+                    scene.add(obstacle);
+                }
+                console.log(`${numObstacles} additional obstacles created`);
+
                 // Set initial Camera position AFTER carModel is loaded and carBaseY is known
                 camera.position.set(0, carBaseY + 3, -7);
                 camera.lookAt(carModel.position.x, carBaseY + 1, carModel.position.z + 5);
@@ -644,24 +728,77 @@
                 else if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') { moveRight = false; }
             });
 
-            // Touch Listeners for Buttons
+            // Touch Listeners for Buttons - Fixed for iframe compatibility
             const leftButton = document.getElementById('left-button');
             const rightButton = document.getElementById('right-button');
 
             if (leftButton) {
-                // Using 'pointerdown' and 'pointerup' for broader compatibility (mouse, touch, pen)
-                // and to correctly handle multiple touches/gestures if needed, though 'touchstart'/'touchend' are fine for simple cases.
-                leftButton.addEventListener('pointerdown', (e) => { if (!isGameOver) { e.preventDefault(); moveRight = true; } }, { passive: false });
-                leftButton.addEventListener('pointerup', (e) => { e.preventDefault(); moveRight = false; });
-                leftButton.addEventListener('pointerleave', (e) => { // If finger slides off button while pressed
-                    if (e.pointerType === 'touch') { moveRight = false; }
+                // Using multiple event types for maximum compatibility in iframes
+                // FIXED: Left button now correctly sets moveLeft = true
+                const handleLeftDown = (e) => {
+                    if (!isGameOver) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        moveLeft = true;  // Correct: Left button moves left
+                        console.log("Left button pressed. moveLeft:", moveLeft);
+                    }
+                };
+                const handleLeftUp = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    moveLeft = false;
+                    console.log("Left button released. moveLeft:", moveLeft);
+                };
+                
+                leftButton.addEventListener('pointerdown', handleLeftDown, { passive: false });
+                leftButton.addEventListener('touchstart', handleLeftDown, { passive: false });
+                leftButton.addEventListener('mousedown', handleLeftDown, { passive: false });
+                
+                leftButton.addEventListener('pointerup', handleLeftUp, { passive: false });
+                leftButton.addEventListener('touchend', handleLeftUp, { passive: false });
+                leftButton.addEventListener('mouseup', handleLeftUp, { passive: false });
+                
+                leftButton.addEventListener('pointerleave', (e) => {
+                    e.stopPropagation();
+                    moveLeft = false;
+                });
+                leftButton.addEventListener('touchcancel', (e) => {
+                    e.stopPropagation();
+                    moveLeft = false;
                 });
             }
             if (rightButton) {
-                rightButton.addEventListener('pointerdown', (e) => { if (!isGameOver) { e.preventDefault(); moveLeft = true; } }, { passive: false });
-                rightButton.addEventListener('pointerup', (e) => { e.preventDefault(); moveLeft = false; });
-                rightButton.addEventListener('pointerleave', (e) => { // If finger slides off button while pressed
-                    if (e.pointerType === 'touch') { moveLeft = false; }
+                // FIXED: Right button now correctly sets moveRight = true
+                const handleRightDown = (e) => {
+                    if (!isGameOver) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        moveRight = true;  // Correct: Right button moves right
+                        console.log("Right button pressed. moveRight:", moveRight);
+                    }
+                };
+                const handleRightUp = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    moveRight = false;
+                    console.log("Right button released. moveRight:", moveRight);
+                };
+                
+                rightButton.addEventListener('pointerdown', handleRightDown, { passive: false });
+                rightButton.addEventListener('touchstart', handleRightDown, { passive: false });
+                rightButton.addEventListener('mousedown', handleRightDown, { passive: false });
+                
+                rightButton.addEventListener('pointerup', handleRightUp, { passive: false });
+                rightButton.addEventListener('touchend', handleRightUp, { passive: false });
+                rightButton.addEventListener('mouseup', handleRightUp, { passive: false });
+                
+                rightButton.addEventListener('pointerleave', (e) => {
+                    e.stopPropagation();
+                    moveRight = false;
+                });
+                rightButton.addEventListener('touchcancel', (e) => {
+                    e.stopPropagation();
+                    moveRight = false;
                 });
             }
         }
@@ -680,6 +817,20 @@
         }
 
         function updateScoreDisplay() { scoreElement.textContent = `Score: ${score}`; }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(countdownTime / 60);
+            const seconds = Math.floor(countdownTime % 60);
+            const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            timerElement.textContent = `Time: ${formattedTime}`;
+            
+            // Add warning style when time is low (last 10 seconds)
+            if (countdownTime <= 10 && countdownTime > 0) {
+                timerElement.classList.add('warning');
+            } else {
+                timerElement.classList.remove('warning');
+            }
+        }
 
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -687,12 +838,51 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        function animate() {
+        function animate(currentTime) {
             requestAnimationFrame(animate); // IMPORTANT: This creates the continuous game loop
 
             if (isGameOver) {
                 renderer.render(scene, camera);
                 return; // Stop game logic updates if game over
+            }
+
+            // --- Calculate Delta Time ---
+            if (lastFrameTime === 0) {
+                lastFrameTime = currentTime;
+                renderer.render(scene, camera);
+                return; // Skip first frame to establish baseline
+            }
+            
+            const deltaTime = (currentTime - lastFrameTime) / 1000; // Convert to seconds
+            lastFrameTime = currentTime;
+            
+            // Accumulate time for countdown timer
+            accumulatedTime += deltaTime;
+
+            // --- Countdown Timer ---
+            // Update every time we accumulate 1 second
+            while (accumulatedTime >= 1.0) {
+                countdownTime -= 1; // Decrement by 1 second
+                accumulatedTime -= 1.0; // Reduce accumulator by 1 second
+                updateTimerDisplay();
+                console.log("Timer tick:", countdownTime); // Debug log
+                
+                // Check if time ran out
+                if (countdownTime <= 0) {
+                    countdownTime = 0;
+                    updateTimerDisplay();
+                    console.log("Time's up!");
+                    triggerGameOver();
+                    return;
+                }
+            }
+
+            // --- Progressive Difficulty: Increase Speed Over Time ---
+            gameTime += deltaTime;
+            if (gameTime - lastSpeedIncrease >= speedIncreaseInterval) {
+                driveSpeed = Math.min(driveSpeed + speedIncreaseAmount, baseDriveSpeed * 2); // Cap at 2x base speed
+                lastSpeedIncrease = gameTime;
+                console.log(`Speed increased to ${driveSpeed.toFixed(2)}`);
             }
 
             const deltaZ = driveSpeed;
@@ -757,14 +947,49 @@
                 enemyCar.position.z -= (enemyCarSpeed + driveSpeed); // Sum of own speed and road scroll speed
 
                 if (enemyCar.position.z < -sceneryRecycleDistance) { // Recycle when it passes player
-                    enemyCar.position.z = roadLength * 0.7 + Math.random() * roadLength * 0.5; // Spawn well ahead
-                    enemyCar.position.x = (Math.random() < 0.5 ? -1 : 1) * (roadWidth / 2 - kerbWidth - 1); // Random lane
+                    enemyCar.position.z = roadLength * 0.5 + Math.random() * roadLength * 0.3; // Spawn closer for more challenge
+                    // Smart lane selection: sometimes block two lanes to force player movement
+                    const lanes = [-roadWidth / 3, 0, roadWidth / 3];
+                    enemyCar.position.x = lanes[Math.floor(Math.random() * lanes.length)];
                     enemyCar.rotation.y = Math.PI; // Ensure it's facing forward
                 }
             }
 
+            // --- Move Additional Obstacles ---
+            obstacles.forEach((obstacle, index) => {
+                obstacle.position.z -= (enemyCarSpeed * 0.8 + driveSpeed); // Slightly slower than main enemy
+                
+                if (obstacle.position.z < -sceneryRecycleDistance) {
+                    // Spawn obstacles with strategic positioning to force lane changes
+                    const lanes = [-roadWidth / 3, 0, roadWidth / 3];
+                    const spawnDistance = roadLength * 0.4 + Math.random() * roadLength * 0.4;
+                    
+                    // 40% chance to spawn adjacent obstacles (blocking 2 lanes)
+                    if (Math.random() < 0.4 && obstacles.length > 1) {
+                        const otherObstacle = obstacles[(index + 1) % obstacles.length];
+                        // Check if other obstacle is nearby
+                        if (Math.abs(otherObstacle.position.z - spawnDistance) < roadLength * 0.2) {
+                            // Place this obstacle adjacent to the other one
+                            const otherLaneIndex = lanes.indexOf(Math.round(otherObstacle.position.x / (roadWidth / 3)) * (roadWidth / 3));
+                            if (otherLaneIndex !== -1 && otherLaneIndex < lanes.length - 1) {
+                                obstacle.position.x = lanes[otherLaneIndex + 1];
+                            } else {
+                                obstacle.position.x = lanes[Math.floor(Math.random() * lanes.length)];
+                            }
+                        } else {
+                            obstacle.position.x = lanes[Math.floor(Math.random() * lanes.length)];
+                        }
+                    } else {
+                        obstacle.position.x = lanes[Math.floor(Math.random() * lanes.length)];
+                    }
+                    
+                    obstacle.position.z = spawnDistance;
+                    obstacle.rotation.y = Math.PI;
+                }
+            });
 
-            // --- Handle Player Car Controls & Update Bounding Box ---
+
+            // --- Handle Player Car Controls with Smooth Movement ---
             if (carModel && carBaseY > 0) { // Ensure car model is loaded and positioned
                 let maxBounds = roadWidth / 2 - kerbWidth - 0.1; // Default fallback bounds
                 let carHalfWidth = 1; // Default fallback for car width
@@ -776,8 +1001,24 @@
                     // console.warn("Could not get car bounding box size, using default bounds.");
                 }
 
-                if (moveLeft && carModel.position.x > -maxBounds) { carModel.position.x -= carMoveSpeed; }
-                if (moveRight && carModel.position.x < maxBounds) { carModel.position.x += carMoveSpeed; }
+                // FIXED: Continuous smooth movement while button is held
+                // Apply continuous horizontal movement based on input flags
+                const moveSpeed = carMoveSpeed; // Use the defined move speed
+                
+                if (moveLeft) {
+                    // Move left continuously while button is held (increase X in this coordinate system)
+                    carModel.position.x += moveSpeed;
+                    // Debug: Uncomment to see movement in console
+                    // console.log("Moving left. Position:", carModel.position.x);
+                }
+                if (moveRight) {
+                    // Move right continuously while button is held (decrease X in this coordinate system)
+                    carModel.position.x -= moveSpeed;
+                    // Debug: Uncomment to see movement in console
+                    // console.log("Moving right. Position:", carModel.position.x);
+                }
+                
+                // Clamp to bounds
                 carModel.position.x = Math.max(-maxBounds, Math.min(maxBounds, carModel.position.x));
 
                 playerBox.setFromObject(carModel); // Always update player's bounding box
@@ -804,35 +1045,90 @@
                     }
                 });
 
-                // Enemy Collision
+                // Enemy Collision - FIXED: Tightened hitboxes to prevent false collisions
                 if (enemyCar && enemyCar.parent) { // Ensure enemyCar is in scene
                     enemyBox.setFromObject(enemyCar);
-                    // Use a slightly larger collision box for player for easier hits or vice versa
-                    const expandedPlayerBox = playerBox.clone().expandByScalar(0.5); // Increase player car's collision area slightly
-                    if (expandedPlayerBox.intersectsBox(enemyBox)) {
-                        console.log("Collision with enemy!");
-                        window.parent.postMessage({ type: "GAME_OVER", score: score }, "*");
-                        isGameOver = true;
-
-                        gameOverElement.style.display = 'flex'; // Show game over screen
+                    
+                    // Shrink hitboxes for more accurate collision detection
+                    // Only trigger collision when cars are actually touching
+                    const shrunkPlayerBox = playerBox.clone().expandByScalar(-0.3); // Shrink by 0.3 units
+                    const shrunkEnemyBox = enemyBox.clone().expandByScalar(-0.3); // Shrink by 0.3 units
+                    
+                    if (shrunkPlayerBox.intersectsBox(shrunkEnemyBox)) {
+                        console.log("Collision with enemy! Player pos:", carModel.position.x.toFixed(2), "Enemy pos:", enemyCar.position.x.toFixed(2));
+                        triggerGameOver();
                     }
                 }
+
+                // Additional Obstacles Collision - FIXED: Tightened hitboxes
+                obstacles.forEach(obstacle => {
+                    if (obstacle && obstacle.parent) {
+                        const obstacleBox = new THREE.Box3().setFromObject(obstacle);
+                        
+                        // Shrink hitboxes for accurate collision detection
+                        const shrunkPlayerBox = playerBox.clone().expandByScalar(-0.3); // Shrink by 0.3 units
+                        const shrunkObstacleBox = obstacleBox.clone().expandByScalar(-0.3); // Shrink by 0.3 units
+                        
+                        if (shrunkPlayerBox.intersectsBox(shrunkObstacleBox)) {
+                            console.log("Collision with obstacle! Player pos:", carModel.position.x.toFixed(2), "Obstacle pos:", obstacle.position.x.toFixed(2));
+                            triggerGameOver();
+                        }
+                    }
+                });
             }
 
             // --- Render ---
             renderer.render(scene, camera);
         }
 
+        // --- Game Over Handler ---
+        function triggerGameOver() {
+            if (isGameOver) return; // Prevent multiple triggers
+            
+            isGameOver = true;
+            
+            // Hide control buttons
+            document.getElementById('left-button').classList.add('hidden');
+            document.getElementById('right-button').classList.add('hidden');
+            
+            // Show blur overlay
+            document.getElementById('game-over-blur').style.display = 'block';
+            
+            // Show custom message
+            document.getElementById('game-over-message').style.display = 'block';
+            
+            // Report final score to parent (PROTECTED CODE)
+            window.parent.postMessage({ type: "GAME_OVER", score: score }, "*");
+            console.log("Game Over! Final Score:", score);
+        }
+
         function restartGame() {
             // Reset game state
             isGameOver = false;
             score = 0;
+            gameTime = 0;
+            lastSpeedIncrease = 0;
+            driveSpeed = baseDriveSpeed; // Reset to base speed
+            countdownTime = 60; // Reset timer to 60 seconds
+            lastFrameTime = 0;
+            accumulatedTime = 0;
             updateScoreDisplay();
+            updateTimerDisplay();
+            
+            // Hide new game over UI
+            document.getElementById('game-over-blur').style.display = 'none';
+            document.getElementById('game-over-message').style.display = 'none';
+            
+            // Show control buttons
+            document.getElementById('left-button').classList.remove('hidden');
+            document.getElementById('right-button').classList.remove('hidden');
+            
             gameOverElement.style.display = 'none';
 
             // Reset player car position
             if (carModel) {
                 carModel.position.set(0, carBaseY, 0);
+                carTargetX = 0; // Reset target position
             }
 
             // Reset enemy car position
@@ -840,6 +1136,17 @@
                 const initialEnemyX = (Math.random() < 0.5 ? -1 : 1) * roadWidth / 4;
                 enemyCar.position.set(initialEnemyX, carBaseY, roadLength * 0.7);
             }
+
+            // Reset obstacles
+            obstacles.forEach((obstacle, i) => {
+                const lanes = [-roadWidth / 3, 0, roadWidth / 3];
+                obstacle.position.set(
+                    lanes[Math.floor(Math.random() * lanes.length)],
+                    carBaseY,
+                    roadLength * 0.3 + i * (roadLength * 0.15)
+                );
+                obstacle.rotation.y = Math.PI;
+            });
 
             // Reset points
             points.forEach(point => resetPointPosition(point, true));

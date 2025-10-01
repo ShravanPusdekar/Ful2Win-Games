@@ -48,46 +48,54 @@ function setupDPadControls() {
     // Left button events - HOLD for continuous movement
     btnLeft.addEventListener('touchstart', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         leftPressed = true;
         rightPressed = false;
     });
     
     btnLeft.addEventListener('touchend', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         leftPressed = false;
     });
     
     btnLeft.addEventListener('touchcancel', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         leftPressed = false;
     });
     
     // Right button events - HOLD for continuous movement
     btnRight.addEventListener('touchstart', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         rightPressed = true;
         leftPressed = false;
     });
     
     btnRight.addEventListener('touchend', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         rightPressed = false;
     });
     
     btnRight.addEventListener('touchcancel', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         rightPressed = false;
     });
     
     // Also support mouse events for testing on desktop
     btnLeft.addEventListener('mousedown', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         leftPressed = true;
         rightPressed = false;
     });
     
     btnLeft.addEventListener('mouseup', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         leftPressed = false;
     });
     
@@ -97,12 +105,14 @@ function setupDPadControls() {
     
     btnRight.addEventListener('mousedown', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         rightPressed = true;
         leftPressed = false;
     });
     
     btnRight.addEventListener('mouseup', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         rightPressed = false;
     });
     
@@ -127,12 +137,14 @@ function setupJumpControl() {
     // Touch events
     btnJump.addEventListener('touchstart', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         handleJump();
     });
     
     // Mouse events for testing on desktop
     btnJump.addEventListener('mousedown', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         handleJump();
     });
 }

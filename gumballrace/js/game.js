@@ -194,11 +194,14 @@ function createGame(event) {
 	//------------------------------------------------------------------
 	// Creation
 	//------------------------------------------------------------------
+	// Add global event listeners for full-screen jump input
+	document.body.addEventListener("mousedown", onMouseDown);
+	document.body.addEventListener("touchstart", onMouseDown);
+	
 	var mouseCacher = new createjs.Shape();
-	mouseCacher.graphics.beginFill("rgba(150, 150, 255, 1)");
+	mouseCacher.graphics.beginFill("rgba(150, 150, 255, 0)");
 	mouseCacher.graphics.rect(0, 0, 480, 320);
 	mouseCacher.graphics.endFill();
-	mouseCacher.addEventListener("mousedown", onMouseDown);
 
 	var game = new createjs.Container();
 	game.name = "game";
@@ -244,7 +247,17 @@ function createGame(event) {
 }
 
 function onMouseDown(event) {
+	// Prevent default behavior to avoid unwanted zoom/scroll
+	if (event.preventDefault) {
+		event.preventDefault();
+	}
 	input.mouseDown = true;
+}
+
+function cleanupGameEvents() {
+	// Remove global event listeners when game ends
+	document.body.removeEventListener("mousedown", onMouseDown);
+	document.body.removeEventListener("touchstart", onMouseDown);
 }
 
 function createGUI(ces, layer) {
@@ -374,6 +387,7 @@ function createGUI(ces, layer) {
 	var exitBtn = createButton(spriteSheets["ui"], localization.exit, function(e) {
 		playSound("button");
 		stopSound("music");
+		cleanupGameEvents();
 		ces = null;
 		var game = stage.getChildByName("game");
 		createjs.Tween.get(game)
@@ -423,6 +437,7 @@ function createGUI(ces, layer) {
 	var exitGameOverBtn = createButton(spriteSheets["ui"], localization.replay, function(e) {
 		stopSound("music");
 		playSound("button");
+		cleanupGameEvents();
 		ces = null;
 		var game = stage.getChildByName("game");
 		stage.removeChild(game);
