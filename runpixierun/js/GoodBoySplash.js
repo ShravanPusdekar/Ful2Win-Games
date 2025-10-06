@@ -28,7 +28,8 @@ var GoodBoySplash = (function()
     function init()
     {
         paperView = document.createElement('canvas');
-        paperStage = new PIXI.Stage(0x25284A, true);
+        // Jungle green background matching Run Pixie Run theme
+        paperStage = new PIXI.Stage(0x2D5016, true); // Dark jungle green
         paperRenderer = PIXI.autoDetectRenderer(nStageWidth, nStageHeight, paperView);
         
         document.body.appendChild(paperRenderer.view);
@@ -36,6 +37,34 @@ var GoodBoySplash = (function()
         preload(function()
         {
             var tick = 0;
+            
+            // Create title text for Run Pixie Run
+            var titleText = new PIXI.Text("RUN PIXIE RUN", {
+                font: "bold 72px Arial",
+                fill: "#FFD700", // Gold color
+                stroke: "#2D5016", // Dark green stroke
+                strokeThickness: 8,
+                dropShadow: true,
+                dropShadowColor: "#000000",
+                dropShadowBlur: 8,
+                dropShadowAngle: Math.PI / 4,
+                dropShadowDistance: 6
+            });
+            titleText.anchor.x = 0.5;
+            titleText.anchor.y = 0.5;
+            titleText.position.x = nStageWidth * 0.5;
+            titleText.position.y = nStageHeight * 0.35;
+            
+            var loadingText = new PIXI.Text("LOADING...", {
+                font: "bold 36px Arial",
+                fill: "#FFFFFF",
+                stroke: "#2D5016",
+                strokeThickness: 5
+            });
+            loadingText.anchor.x = 0.5;
+            loadingText.anchor.y = 0.5;
+            loadingText.position.x = nStageWidth * 0.5;
+            loadingText.position.y = nStageHeight * 0.65;
             
             interval = setInterval(function()
             {
@@ -47,24 +76,23 @@ var GoodBoySplash = (function()
                 
                 paperStage.stage.children = [];
                 
-                var sprite = SpritePool.getInstance().get(loadingFrames[tick])
-                    sprite.anchor.x = 0.5;
-                    sprite.anchor.y = 0.5;
-                    sprite.position.x = nStageWidth * 0.5;
-                    sprite.position.y = nStageHeight * 0.5;
-                    
-                    // Scale goodboy_logo.png to fit screen size, keep normal size for loading frames
-                    if(loadingFrames[tick] === "img/goodboy_logo.png") {
-                        // Calculate scale to fit screen with some padding
-                        var scaleX = (nStageWidth * 0.8) / sprite.texture.width;
-                        var scaleY = (nStageHeight * 0.8) / sprite.texture.height;
-                        var scale = Math.min(scaleX, scaleY); // Use smaller scale to maintain aspect ratio
-                        sprite.scale.set(scale);
-                    } else {
-                        sprite.scale.set(1); // Keep loading frames normal size
-                    }
-                 
+                // Add title
+                paperStage.addChild(titleText);
+                
+                // Add animated loading indicator
+                var sprite = SpritePool.getInstance().get(loadingFrames[tick]);
+                sprite.anchor.x = 0.5;
+                sprite.anchor.y = 0.5;
+                sprite.position.x = nStageWidth * 0.5;
+                sprite.position.y = nStageHeight * 0.5;
+                sprite.scale.set(1.5); // Slightly larger loading animation
+                
                 paperStage.addChild(sprite);
+                
+                // Add loading text with pulsing effect
+                loadingText.alpha = 0.5 + Math.sin(Date.now() / 200) * 0.5;
+                paperStage.addChild(loadingText);
+                
                 paperRenderer.render(paperStage);
                 
             }, 200);

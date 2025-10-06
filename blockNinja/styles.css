@@ -47,7 +47,7 @@ body {
 }
 
 .hud__score {
-	top: 0.65em;
+	top: 60px;
 	left: 0.65em;
 	pointer-events: none;
 	user-select: none;
@@ -250,6 +250,39 @@ button:active::before {
 
 a {
 	color: white;
+}
+
+/* Game Over Blur Effect */
+.game-over-blur {
+	filter: blur(8px);
+	pointer-events: none;
+	transition: filter 0.5s ease-out;
+}
+
+/* Responsive UI positioning for mobile */
+@media (max-width: 768px) {
+	.hud__score {
+		top: 50px;
+		font-size: calc(12px + 1.5vw + 0.8vh);
+	}
+}
+
+.game-over-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.7);
+	z-index: 2000;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+.game-over-overlay.active {
+	opacity: 1;
+	visibility: visible;
 }
 
 /* Only enable hover state on large screens */

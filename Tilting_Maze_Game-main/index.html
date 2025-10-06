@@ -3,12 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; frame-ancestors *;">
     <link rel="stylesheet" href="style.css">
-    <title>Maze Game</title>
+    <title>Tilting Maze Game</title>
 </head>
 <body>
-    <div id="center">  
+    <!-- Mode Selection Screen (shown initially) -->
+    <div id="mode-selection" class="mode-selection-screen">
+        <div class="mode-selection-content">
+            <h1 class="game-title">Tilting Maze Game</h1>
+            <p class="game-description">Choose your difficulty level to start playing!</p>
+            <div class="mode-buttons">
+                <button id="easy-mode-btn" class="mode-btn easy-btn">Easy Mode</button>
+                <button id="hard-mode-btn" class="mode-btn hard-btn">Hard Mode</button>
+            </div>
+            <div class="mode-info">
+                <div class="mode-detail">
+                    <h3>Easy Mode</h3>
+                    <p>Move all 4 balls to the center<br>Score: 1 ball = +10, 2 balls = +20, 3 balls = +50, 4 balls = +100</p>
+                </div>
+                <div class="mode-detail">
+                    <h3>Hard Mode</h3>
+                    <p>Avoid black holes! Same scoring as Easy Mode<br>Penalty: -5 points per black hole hit<br>Game Over if score drops below 0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Elements (hidden initially) -->
+    <div class="top-bar-container game-element" style="display: none;">
+        <div id="score-display" class="floating-display">Score: <span id="score">0</span></div>
+        <div id="timer-display" class="floating-display">Time: <span id="timer">2:00</span></div>
+    </div>
+    <div id="center" class="game-element" style="display: none;">  
         <div id="game">  
          <div id="maze">  
           <div id="end"></div>  
@@ -22,7 +50,7 @@
          </div>  
          <div id="note">  
           Click the joystick to start!  
-          <p>Move every ball to the center. Ready for hard mode? Press H</p>  
+          <p>Move every ball to the center.</p>  
          </div>  
         </div>  
        </div>  

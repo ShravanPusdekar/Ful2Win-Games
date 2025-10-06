@@ -1,9 +1,57 @@
-   Math.minmax = (value, limit) => {  
+// Game state variables
+let gameScore = 0;
+let gameTimer = 120; // 2 minutes in seconds
+let timerInterval = null;
+let gameStarted = false;
+let ballsInCenter = 0;
+let lastScoringState = 0; // Track the last scoring state to prevent duplicate scoring
+let modeSelected = false;
+let hardMode = false;
+
+// Responsive scaling variables
+let scaleFactor = 1;
+let BASE_WIDTH = 350;
+let BASE_HEIGHT = 315;
+let BASE_PATH_W = 25;
+let BASE_WALL_W = 10;
+let BASE_BALL_SIZE = 10;
+let BASE_HOLE_SIZE = 18;
+let BASE_END_SIZE = 65;
+
+// Fixed dimensions for stability (8% smaller for better proportions)
+const pathW = 23; // Path width (reduced from 25)
+const wallW = 9; // Wall width (reduced from 10)
+const ballSize = 9; // Width and height of the ball (reduced from 10)
+const holeSize = 17; // Hole size (reduced from 18)
+const endSize = 60; // End target size (reduced from 65)
+const mazeWidth = 350;
+const mazeHeight = 315;
+
+Math.minmax = (value, limit) => {  
     return Math.max(Math.min(value, limit), -limit);  
-   };  
-   const distance2D = (p1, p2) => {  
+};
+
+const distance2D = (p1, p2) => {  
     return Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);  
-   };  
+};
+
+// Simple initialization function
+const initializeGame = () => {
+    // Ensure maze has correct dimensions
+    const mazeElement = document.getElementById("maze");
+    if (mazeElement) {
+        mazeElement.style.width = `${mazeWidth}px`;
+        mazeElement.style.height = `${mazeHeight}px`;
+    }
+    
+    // Ensure end element has correct size
+    const endElement = document.getElementById("end");
+    if (endElement) {
+        endElement.style.width = `${endSize}px`;
+        endElement.style.height = `${endSize}px`;
+        endElement.style.border = `5px dashed var(--end-color)`;
+    }
+};  
    // Angle between the two points  
    const getAngle = (p1, p2) => {  
     let angle = Math.atan((p2.y - p1.y) / (p2.x - p1.x));  
@@ -63,8 +111,89 @@
    };  
    const mazeElement = document.getElementById("maze");  
    const joystickHeadElement = document.getElementById("joystick-head");  
-   const noteElement = document.getElementById("note"); // Note element for instructions and game won, game failed texts  
-   let hardMode = false;  
+   const noteElement = document.getElementById("note"); // Note element for instructions and game won, game failed texts
+   const scoreElement = document.getElementById("score");
+   const timerElement = document.getElementById("timer");
+
+   // Timer functions
+   const updateTimer = () => {
+       const minutes = Math.floor(gameTimer / 60);
+       const seconds = gameTimer % 60;
+       timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+   };
+
+   const startTimer = () => {
+       if (timerInterval) clearInterval(timerInterval);
+       timerInterval = setInterval(() => {
+           gameTimer--;
+           updateTimer();
+           if (gameTimer <= 0) {
+               endGame("Time's up!");
+           }
+       }, 1000);
+   };
+
+   const stopTimer = () => {
+       if (timerInterval) {
+           clearInterval(timerInterval);
+           timerInterval = null;
+       }
+   };
+
+   // Score functions
+   const updateScore = (points) => {
+       gameScore += points;
+       scoreElement.textContent = gameScore;
+       
+       // Check for game over in Hard Mode if score drops below 0
+       if (hardMode && gameScore < 0 && gameInProgress) {
+           endGame("Game Over! Score dropped below 0!");
+       }
+   };
+
+   const resetScore = () => {
+       gameScore = 0;
+       scoreElement.textContent = gameScore;
+   };
+
+   // End game function
+   const endGame = (message) => {
+       gameInProgress = false;
+       gameStarted = false;
+       stopTimer();
+       
+       // Apply complete blur effect to entire game screen
+       const centerElement = document.getElementById("center");
+       if (centerElement) {
+           centerElement.style.filter = "blur(8px)";
+           centerElement.style.transition = "filter 0.8s ease";
+           centerElement.style.pointerEvents = "none"; // Disable all interactions
+       }
+       
+       // Disable joystick input completely
+       joystickHeadElement.style.pointerEvents = "none";
+       joystickHeadElement.style.cursor = "not-allowed";
+       joystickHeadElement.style.opacity = "0.5";
+       
+       // Reset maze rotation and disable physics
+       mazeElement.style.cssText = `transform: rotateY(0deg) rotateX(0deg)`;
+       
+       // Show game over message (keep unblurred for readability)
+       noteElement.innerHTML = `${message}<br>Final Score: ${gameScore}<br><p>Game Over!</p>`;
+       noteElement.style.opacity = 1;
+       noteElement.style.filter = "none";
+       noteElement.style.pointerEvents = "auto"; // Keep note interactive
+       noteElement.style.position = "relative";
+       noteElement.style.zIndex = "1001"; // Ensure it's above blurred content
+       
+       // Communicate score to parent window
+       try {
+           window.parent.postMessage({ type: "GAME_OVER", score: gameScore }, "*");
+       } catch (error) {
+           console.log("Could not send message to parent window:", error);
+       }
+   };  
+  
    let previousTimestamp;  
    let gameInProgress;  
    let mouseStartX;  
@@ -73,191 +202,266 @@
    let accelerationY;  
    let frictionX;  
    let frictionY;  
-   const pathW = 25; // Path width  
-   const wallW = 10; // Wall width  
-   const ballSize = 10; // Width and height of the ball  
-   const holeSize = 18;  
    const debugMode = false;  
    let balls = [];  
    let ballElements = [];  
-   let holeElements = [];  
-   resetGame();  
-   // Draw balls for the first time  
-   balls.forEach(({ x, y }) => {  
-    const ball = document.createElement("div");  
-    ball.setAttribute("class", "ball");  
-    ball.style.cssText = `left: ${x}px; top: ${y}px; `;  
-    mazeElement.appendChild(ball);  
-    ballElements.push(ball);  
+   let holeElements = [];
+
+   // Dynamic walls function
+   const getWalls = () => {
+       return [
+           // Border  
+           { column: 0, row: 0, horizontal: true, length: 10 },  
+           { column: 0, row: 0, horizontal: false, length: 9 },  
+           { column: 0, row: 9, horizontal: true, length: 10 },  
+           { column: 10, row: 0, horizontal: false, length: 9 },  
+           // Horizontal lines starting in 1st column  
+           { column: 0, row: 6, horizontal: true, length: 1 },  
+           { column: 0, row: 8, horizontal: true, length: 1 },  
+           // Horizontal lines starting in 2nd column  
+           { column: 1, row: 1, horizontal: true, length: 2 },  
+           { column: 1, row: 7, horizontal: true, length: 1 },  
+           // Horizontal lines starting in 3rd column  
+           { column: 2, row: 2, horizontal: true, length: 2 },  
+           { column: 2, row: 4, horizontal: true, length: 1 },  
+           { column: 2, row: 5, horizontal: true, length: 1 },  
+           { column: 2, row: 6, horizontal: true, length: 1 },  
+           // Horizontal lines starting in 4th column  
+           { column: 3, row: 3, horizontal: true, length: 1 },  
+           { column: 3, row: 8, horizontal: true, length: 3 },  
+           // Horizontal lines starting in 5th column  
+           { column: 4, row: 6, horizontal: true, length: 1 },  
+           // Horizontal lines starting in 6th column  
+           { column: 5, row: 2, horizontal: true, length: 2 },  
+           { column: 5, row: 7, horizontal: true, length: 1 },  
+           // Horizontal lines starting in 7th column  
+           { column: 6, row: 1, horizontal: true, length: 1 },  
+           { column: 6, row: 6, horizontal: true, length: 2 },  
+           // Horizontal lines starting in 8th column  
+           { column: 7, row: 3, horizontal: true, length: 2 },  
+           { column: 7, row: 7, horizontal: true, length: 2 },  
+           // Horizontal lines starting in 9th column  
+           { column: 8, row: 1, horizontal: true, length: 1 },  
+           { column: 8, row: 2, horizontal: true, length: 1 },  
+           { column: 8, row: 3, horizontal: true, length: 1 },  
+           { column: 8, row: 4, horizontal: true, length: 2 },  
+           { column: 8, row: 8, horizontal: true, length: 2 },  
+           // Vertical lines after the 1st column  
+           { column: 1, row: 1, horizontal: false, length: 2 },  
+           { column: 1, row: 4, horizontal: false, length: 2 },  
+           // Vertical lines after the 2nd column  
+           { column: 2, row: 2, horizontal: false, length: 2 },  
+           { column: 2, row: 5, horizontal: false, length: 1 },  
+           { column: 2, row: 7, horizontal: false, length: 2 },  
+           // Vertical lines after the 3rd column  
+           { column: 3, row: 0, horizontal: false, length: 1 },  
+           { column: 3, row: 4, horizontal: false, length: 1 },  
+           { column: 3, row: 6, horizontal: false, length: 2 },  
+           // Vertical lines after the 4th column  
+           { column: 4, row: 1, horizontal: false, length: 2 },  
+           { column: 4, row: 6, horizontal: false, length: 1 },  
+           // Vertical lines after the 5th column  
+           { column: 5, row: 0, horizontal: false, length: 2 },  
+           { column: 5, row: 6, horizontal: false, length: 1 },  
+           { column: 5, row: 8, horizontal: false, length: 1 },  
+           // Vertical lines after the 6th column  
+           { column: 6, row: 4, horizontal: false, length: 1 },  
+           { column: 6, row: 6, horizontal: false, length: 1 },  
+           // Vertical lines after the 7th column  
+           { column: 7, row: 1, horizontal: false, length: 4 },  
+           { column: 7, row: 7, horizontal: false, length: 2 },  
+           // Vertical lines after the 8th column  
+           { column: 8, row: 2, horizontal: false, length: 1 },  
+           { column: 8, row: 4, horizontal: false, length: 2 },  
+           // Vertical lines after the 9th column  
+           { column: 9, row: 1, horizontal: false, length: 1 },  
+           { column: 9, row: 5, horizontal: false, length: 2 }  
+       ].map((wall) => ({  
+           x: wall.column * (pathW + wallW),  
+           y: wall.row * (pathW + wallW),  
+           horizontal: wall.horizontal,  
+           length: wall.length * (pathW + wallW)  
+       }));
+   };
+
+   // Dynamic holes function (reduced number for Hard Mode)
+   const getHoles = () => {
+       return [  
+           { column: 2, row: 4 },  
+           { column: 6, row: 2 },  
+           { column: 6, row: 8 },  
+           { column: 8, row: 1 }  
+       ].map((hole) => ({  
+           x: hole.column * (wallW + pathW) + (wallW / 2 + pathW / 2),  
+           y: hole.row * (wallW + pathW) + (wallW / 2 + pathW / 2)  
+       }));
+   };
+
+   // Draw walls function
+   const drawWalls = () => {
+       // Remove existing walls
+       const existingWalls = mazeElement.querySelectorAll('.wall');
+       existingWalls.forEach(wall => mazeElement.removeChild(wall));
+       
+       // Draw new walls with current scaling
+       const walls = getWalls();
+       walls.forEach(({ x, y, horizontal, length }) => {
+           const wall = document.createElement("div");
+           wall.setAttribute("class", "wall");
+           wall.style.cssText = `
+               left: ${x}px;
+               top: ${y}px;
+               width: ${wallW}px;
+               height: ${length}px;
+               transform: rotate(${horizontal ? -90 : 0}deg);
+           `;
+           mazeElement.appendChild(wall);
+       });
+   };
+
+   // Initialize game and draw initial elements (but don't start)
+   initializeGame();
+   drawWalls();
+
+   // Initialize displays
+   updateTimer();
+   resetScore();  
+
+   // Start game function (unified for mouse and touch)
+   const startGame = (clientX, clientY) => {
+       if (!gameInProgress && modeSelected) {
+           mouseStartX = clientX;
+           mouseStartY = clientY;
+           gameInProgress = true;
+           gameStarted = true;
+           
+           // Start timer
+           gameTimer = 120;
+           updateTimer();
+           startTimer();
+           
+           window.requestAnimationFrame(main);
+           noteElement.style.opacity = 0;
+           joystickHeadElement.style.cssText = `
+               animation: none;
+               cursor: grabbing;
+           `;
+       }
+   };
+
+   // Mouse events
+   joystickHeadElement.addEventListener("mousedown", function (event) {
+       startGame(event.clientX, event.clientY);
+   });
+
+   // Touch events for mobile support
+   joystickHeadElement.addEventListener("touchstart", function (event) {
+       event.preventDefault();
+       const touch = event.touches[0];
+       startGame(touch.clientX, touch.clientY);
    });  
-   // Wall metadata  
-   const walls = [  
-    // Border  
-    { column: 0, row: 0, horizontal: true, length: 10 },  
-    { column: 0, row: 0, horizontal: false, length: 9 },  
-    { column: 0, row: 9, horizontal: true, length: 10 },  
-    { column: 10, row: 0, horizontal: false, length: 9 },  
-    // Horizontal lines starting in 1st column  
-    { column: 0, row: 6, horizontal: true, length: 1 },  
-    { column: 0, row: 8, horizontal: true, length: 1 },  
-    // Horizontal lines starting in 2nd column  
-    { column: 1, row: 1, horizontal: true, length: 2 },  
-    { column: 1, row: 7, horizontal: true, length: 1 },  
-    // Horizontal lines starting in 3rd column  
-    { column: 2, row: 2, horizontal: true, length: 2 },  
-    { column: 2, row: 4, horizontal: true, length: 1 },  
-    { column: 2, row: 5, horizontal: true, length: 1 },  
-    { column: 2, row: 6, horizontal: true, length: 1 },  
-    // Horizontal lines starting in 4th column  
-    { column: 3, row: 3, horizontal: true, length: 1 },  
-    { column: 3, row: 8, horizontal: true, length: 3 },  
-    // Horizontal lines starting in 5th column  
-    { column: 4, row: 6, horizontal: true, length: 1 },  
-    // Horizontal lines starting in 6th column  
-    { column: 5, row: 2, horizontal: true, length: 2 },  
-    { column: 5, row: 7, horizontal: true, length: 1 },  
-    // Horizontal lines starting in 7th column  
-    { column: 6, row: 1, horizontal: true, length: 1 },  
-    { column: 6, row: 6, horizontal: true, length: 2 },  
-    // Horizontal lines starting in 8th column  
-    { column: 7, row: 3, horizontal: true, length: 2 },  
-    { column: 7, row: 7, horizontal: true, length: 2 },  
-    // Horizontal lines starting in 9th column  
-    { column: 8, row: 1, horizontal: true, length: 1 },  
-    { column: 8, row: 2, horizontal: true, length: 1 },  
-    { column: 8, row: 3, horizontal: true, length: 1 },  
-    { column: 8, row: 4, horizontal: true, length: 2 },  
-    { column: 8, row: 8, horizontal: true, length: 2 },  
-    // Vertical lines after the 1st column  
-    { column: 1, row: 1, horizontal: false, length: 2 },  
-    { column: 1, row: 4, horizontal: false, length: 2 },  
-    // Vertical lines after the 2nd column  
-    { column: 2, row: 2, horizontal: false, length: 2 },  
-    { column: 2, row: 5, horizontal: false, length: 1 },  
-    { column: 2, row: 7, horizontal: false, length: 2 },  
-    // Vertical lines after the 3rd column  
-    { column: 3, row: 0, horizontal: false, length: 1 },  
-    { column: 3, row: 4, horizontal: false, length: 1 },  
-    { column: 3, row: 6, horizontal: false, length: 2 },  
-    // Vertical lines after the 4th column  
-    { column: 4, row: 1, horizontal: false, length: 2 },  
-    { column: 4, row: 6, horizontal: false, length: 1 },  
-    // Vertical lines after the 5th column  
-    { column: 5, row: 0, horizontal: false, length: 2 },  
-    { column: 5, row: 6, horizontal: false, length: 1 },  
-    { column: 5, row: 8, horizontal: false, length: 1 },  
-    // Vertical lines after the 6th column  
-    { column: 6, row: 4, horizontal: false, length: 1 },  
-    { column: 6, row: 6, horizontal: false, length: 1 },  
-    // Vertical lines after the 7th column  
-    { column: 7, row: 1, horizontal: false, length: 4 },  
-    { column: 7, row: 7, horizontal: false, length: 2 },  
-    // Vertical lines after the 8th column  
-    { column: 8, row: 2, horizontal: false, length: 1 },  
-    { column: 8, row: 4, horizontal: false, length: 2 },  
-    // Vertical lines after the 9th column  
-    { column: 9, row: 1, horizontal: false, length: 1 },  
-    { column: 9, row: 5, horizontal: false, length: 2 }  
-   ].map((wall) => ({  
-    x: wall.column * (pathW + wallW),  
-    y: wall.row * (pathW + wallW),  
-    horizontal: wall.horizontal,  
-    length: wall.length * (pathW + wallW)  
-   }));  
-   // Draw walls  
-   walls.forEach(({ x, y, horizontal, length }) => {  
-    const wall = document.createElement("div");  
-    wall.setAttribute("class", "wall");  
-    wall.style.cssText = `  
-      left: ${x}px;  
-      top: ${y}px;  
-      width: ${wallW}px;  
-      height: ${length}px;  
-      transform: rotate(${horizontal ? -90 : 0}deg);  
-     `;  
-    mazeElement.appendChild(wall);  
-   });  
-   const holes = [  
-    { column: 0, row: 5 },  
-    { column: 2, row: 0 },  
-    { column: 2, row: 4 },  
-    { column: 4, row: 6 },  
-    { column: 6, row: 2 },  
-    { column: 6, row: 8 },  
-    { column: 8, row: 1 },  
-    { column: 8, row: 2 }  
-   ].map((hole) => ({  
-    x: hole.column * (wallW + pathW) + (wallW / 2 + pathW / 2),  
-    y: hole.row * (wallW + pathW) + (wallW / 2 + pathW / 2)  
-   }));  
-   joystickHeadElement.addEventListener("mousedown", function (event) {  
-    if (!gameInProgress) {  
-     mouseStartX = event.clientX;  
-     mouseStartY = event.clientY;  
-     gameInProgress = true;  
-     window.requestAnimationFrame(main);  
-     noteElement.style.opacity = 0;  
-     joystickHeadElement.style.cssText = `  
-       animation: none;  
-       cursor: grabbing;  
-      `;  
-    }  
-   });  
-   window.addEventListener("mousemove", function (event) {  
-    if (gameInProgress) {  
-     const mouseDeltaX = -Math.minmax(mouseStartX - event.clientX, 15);  
-     const mouseDeltaY = -Math.minmax(mouseStartY - event.clientY, 15);  
-     joystickHeadElement.style.cssText = `  
-       left: ${mouseDeltaX}px;  
-       top: ${mouseDeltaY}px;  
-       animation: none;  
-       cursor: grabbing;  
-      `;  
-     const rotationY = mouseDeltaX * 0.8; // Max rotation = 12  
-     const rotationX = mouseDeltaY * 0.8;  
-     mazeElement.style.cssText = `  
-       transform: rotateY(${rotationY}deg) rotateX(${-rotationX}deg)  
-      `;  
-     const gravity = 2;  
-     const friction = 0.01; // Coefficients of friction  
-     accelerationX = gravity * Math.sin((rotationY / 180) * Math.PI);  
-     accelerationY = gravity * Math.sin((rotationX / 180) * Math.PI);  
-     frictionX = gravity * Math.cos((rotationY / 180) * Math.PI) * friction;  
-     frictionY = gravity * Math.cos((rotationX / 180) * Math.PI) * friction;  
-    }  
-   });  
-   window.addEventListener("keydown", function (event) {  
-    // If not an arrow key or space or H was pressed then return  
-    if (![" ", "H", "h", "E", "e"].includes(event.key)) return;  
-    // If an arrow key was pressed then first prevent default  
-    event.preventDefault();  
-    // If space was pressed restart the game  
-    if (event.key == " ") {  
-     resetGame();  
-     return;  
-    }  
-    // Set Hard mode  
-    if (event.key == "H" || event.key == "h") {  
-     hardMode = true;  
-     resetGame();  
-     return;  
-    }  
-    // Set Easy mode  
-    if (event.key == "E" || event.key == "e") {  
-     hardMode = false;  
-     resetGame();  
-     return;  
-    }  
+   // Update game function (unified for mouse and touch)
+   const updateGame = (clientX, clientY) => {
+       if (gameInProgress) {
+           const mouseDeltaX = -Math.minmax(mouseStartX - clientX, 15);
+           const mouseDeltaY = -Math.minmax(mouseStartY - clientY, 15);
+           
+           joystickHeadElement.style.cssText = `
+               left: ${mouseDeltaX}px;
+               top: ${mouseDeltaY}px;
+               animation: none;
+               cursor: grabbing;
+           `;
+           
+           const rotationY = mouseDeltaX * 1.0; // Increased sensitivity for better responsiveness
+           const rotationX = mouseDeltaY * 1.0;
+           
+           mazeElement.style.cssText = `
+               transform: rotateY(${rotationY}deg) rotateX(${-rotationX}deg)
+           `;
+           
+           const gravity = 6.0; // Significantly increased for ultra-fast response
+           const friction = 0.008; // Further reduced for maximum responsiveness
+           const dampening = 0.98; // Maintained for natural feel
+           
+           accelerationX = gravity * Math.sin((rotationY / 180) * Math.PI);
+           accelerationY = gravity * Math.sin((rotationX / 180) * Math.PI);
+           frictionX = gravity * Math.cos((rotationY / 180) * Math.PI) * friction;
+           frictionY = gravity * Math.cos((rotationX / 180) * Math.PI) * friction;
+       }
+   };
+
+   // Mouse movement
+   window.addEventListener("mousemove", function (event) {
+       updateGame(event.clientX, event.clientY);
+   });
+
+   // Touch movement with improved responsiveness
+   window.addEventListener("touchmove", function (event) {
+       event.preventDefault();
+       if (gameInProgress && event.touches.length > 0) {
+           const touch = event.touches[0];
+           updateGame(touch.clientX, touch.clientY);
+       }
+   }, { passive: false });
+   
+   // Additional touch optimization for better mobile performance
+   window.addEventListener("touchstart", function (event) {
+       if (gameInProgress) {
+           event.preventDefault();
+       }
+   }, { passive: false });  
+   // Window resize handler (simplified)
+   let resizeTimeout;
+   window.addEventListener("resize", function() {
+       clearTimeout(resizeTimeout);
+       resizeTimeout = setTimeout(() => {
+           initializeGame();
+           drawWalls();
+       }, 100);
+   });
+
+   // Orientation change handler for mobile
+   window.addEventListener("orientationchange", function() {
+       setTimeout(() => {
+           initializeGame();
+           drawWalls();
+       }, 500);
    });  
    function resetGame() {  
     previousTimestamp = undefined;  
-    gameInProgress = false;  
+    gameInProgress = false;
+    gameStarted = false;
+    ballsInCenter = 0;
+    lastScoringState = 0;
+    
+    // Stop and reset timer
+    stopTimer();
+    gameTimer = 120;
+    updateTimer();
+    
+    // Reset score only if not continuing from a previous game
+    if (!gameStarted) {
+        resetScore();
+    }
+    
     mouseStartX = undefined;  
     mouseStartY = undefined;  
     accelerationX = undefined;  
     accelerationY = undefined;  
     frictionX = undefined;  
     frictionY = undefined;  
+    
+    // Initialize game elements
+    initializeGame();
+    
+    // Remove blur effect from previous game end
+    const gameElement = document.getElementById("game");
+    if (gameElement) {
+        gameElement.style.filter = "none";
+        gameElement.style.transition = "filter 0.5s ease";
+    }
+    
     mazeElement.style.cssText = `  
       transform: rotateY(0deg) rotateX(0deg)  
      `;  
@@ -267,14 +471,18 @@
       animation: glow;  
       cursor: grab;  
      `;  
+    
+    
     if (hardMode) {  
      noteElement.innerHTML = `Click the joystick to start!  
-       <p>Hard mode, Avoid black holes. Back to easy mode? Press E</p>`;  
+       <p>Hard mode: Avoid black holes!</p>`;  
     } else {  
      noteElement.innerHTML = `Click the joystick to start!  
-       <p>Move every ball to the center. Ready for hard mode? Press H</p>`;  
+       <p>Move every ball to the center.</p>`;  
     }  
     noteElement.style.opacity = 1;  
+    
+    // Reset balls to corners (4 balls exactly)
     balls = [  
      { column: 0, row: 0 },  
      { column: 9, row: 0 },  
@@ -286,24 +494,39 @@
      velocityX: 0,  
      velocityY: 0  
     }));  
-    if (ballElements.length) {  
-     balls.forEach(({ x, y }, index) => {  
-      ballElements[index].style.cssText = `left: ${x}px; top: ${y}px; `;  
-     });  
-    }  
+    
+    // Remove existing ball elements
+    ballElements.forEach((ballElement) => {
+        if (ballElement.parentNode) {
+            mazeElement.removeChild(ballElement);
+        }
+    });
+    ballElements = [];
+    
+    // Create new ball elements
+    balls.forEach(({ x, y }) => {
+        const ball = document.createElement("div");
+        ball.setAttribute("class", "ball");
+        ball.style.cssText = `left: ${x}px; top: ${y}px;`;
+        mazeElement.appendChild(ball);
+        ballElements.push(ball);
+    });  
+    
     // Remove previous hole elements  
     holeElements.forEach((holeElement) => {  
      mazeElement.removeChild(holeElement);  
     });  
     holeElements = [];  
+    
     // Reset hole elements if hard mode  
     if (hardMode) {  
+     const holes = getHoles();
      holes.forEach(({ x, y }) => {  
-      const ball = document.createElement("div");  
-      ball.setAttribute("class", "black-hole");  
-      ball.style.cssText = `left: ${x}px; top: ${y}px; `;  
-      mazeElement.appendChild(ball);  
-      holeElements.push(ball);  
+      const hole = document.createElement("div");  
+      hole.setAttribute("class", "black-hole");  
+      hole.style.cssText = `left: ${x}px; top: ${y}px; `;  
+      mazeElement.appendChild(hole);  
+      holeElements.push(hole);  
      });  
     }  
    }  
@@ -315,7 +538,7 @@
      window.requestAnimationFrame(main);  
      return;  
     }  
-    const maxVelocity = 1.5;  
+    const maxVelocity = 3.2; // Significantly increased for ultra-fast movement  
     // Time passed since last cycle divided by 16  
     // This function gets called every 16 ms on average so dividing by 16 will result in 1  
     const timeElapsed = (timestamp - previousTimestamp) / 16;  
@@ -333,10 +556,11 @@
         ball.velocityX = slow(ball.velocityX, frictionDeltaX);  
        } else {  
         ball.velocityX = ball.velocityX + velocityChangeX;  
-        ball.velocityX = Math.max(Math.min(ball.velocityX, 1.5), -1.5);  
-        ball.velocityX =  
-         ball.velocityX - Math.sign(velocityChangeX) * frictionDeltaX;  
-        ball.velocityX = Math.minmax(ball.velocityX, maxVelocity);  
+        ball.velocityX = Math.max(Math.min(ball.velocityX, maxVelocity), -maxVelocity);  
+        ball.velocityX = ball.velocityX - Math.sign(velocityChangeX) * frictionDeltaX;  
+        ball.velocityX = Math.minmax(ball.velocityX, maxVelocity);
+        // Apply dampening for ultra-responsive movement
+        ball.velocityX *= 0.999;  
        }  
        if (velocityChangeY == 0) {  
         // No rotation, the plane is flat  
@@ -344,15 +568,17 @@
         ball.velocityY = slow(ball.velocityY, frictionDeltaY);  
        } else {  
         ball.velocityY = ball.velocityY + velocityChangeY;  
-        ball.velocityY =  
-         ball.velocityY - Math.sign(velocityChangeY) * frictionDeltaY;  
-        ball.velocityY = Math.minmax(ball.velocityY, maxVelocity);  
+        ball.velocityY = ball.velocityY - Math.sign(velocityChangeY) * frictionDeltaY;  
+        ball.velocityY = Math.minmax(ball.velocityY, maxVelocity);
+        // Apply dampening for ultra-responsive movement
+        ball.velocityY *= 0.999;  
        }  
        // Preliminary next ball position, only becomes true if no hit occurs  
        // Used only for hit testing, does not mean that the ball will reach this position  
        ball.nextX = ball.x + ball.velocityX;  
        ball.nextY = ball.y + ball.velocityY;  
        if (debugMode) console.log("tick", ball);  
+       const walls = getWalls();
        walls.forEach((wall, wi) => {  
         if (wall.horizontal) {  
          // Horizontal wall  
@@ -522,20 +748,96 @@
          }  
         }  
        });  
-       // Detect is a ball fell into a hole  
+       // Detect if a ball fell into a hole  
        if (hardMode) {  
+        const holes = getHoles();
         holes.forEach((hole, hi) => {  
          const distance = distance2D(hole, {  
           x: ball.nextX,  
           y: ball.nextY  
          });  
          if (distance <= holeSize / 2) {  
-          // The ball fell into a hole  
-          holeElements[hi].style.backgroundColor = "red";  
-          throw Error("The ball fell into a hole");  
+          // The ball fell into a hole - deduct points and respawn
+          updateScore(-5);
+          holeElements[hi].style.backgroundColor = "red";
+          
+          // Flash effect
+          setTimeout(() => {
+              if (holeElements[hi]) {
+                  holeElements[hi].style.backgroundColor = "black";
+              }
+          }, 300);
+          
+          // Respawn ball at original position
+          const ballIndex = balls.indexOf(ball);
+          const originalPositions = [
+              { column: 0, row: 0 },
+              { column: 9, row: 0 },
+              { column: 0, row: 8 },
+              { column: 9, row: 8 }
+          ];
+          
+          if (ballIndex >= 0 && ballIndex < originalPositions.length) {
+              const pos = originalPositions[ballIndex];
+              ball.x = pos.column * (wallW + pathW) + (wallW / 2 + pathW / 2);
+              ball.y = pos.row * (wallW + pathW) + (wallW / 2 + pathW / 2);
+              ball.velocityX = 0;
+              ball.velocityY = 0;
+              ball.nextX = ball.x;
+              ball.nextY = ball.y;
+          }
          }  
         });  
        }  
+       // Ball-to-ball collision detection (prevent merging) - Enhanced
+       for (let i = 0; i < balls.length; i++) {
+           if (i === balls.indexOf(ball)) continue; // Skip self
+           
+           const otherBall = balls[i];
+           const distance = distance2D(ball, otherBall);
+           const minDistance = ballSize + 2; // Add buffer to prevent sticking
+           
+           if (distance < minDistance && distance > 0.1) {
+               // Calculate collision response with improved physics
+               const angle = getAngle(ball, otherBall);
+               const overlap = minDistance - distance;
+               
+               // Separate balls more aggressively
+               const separationX = Math.cos(angle) * (overlap / 2 + 1);
+               const separationY = Math.sin(angle) * (overlap / 2 + 1);
+               
+               // Move balls apart
+               ball.x -= separationX;
+               ball.y -= separationY;
+               otherBall.x += separationX;
+               otherBall.y += separationY;
+               
+               // Update next positions to prevent immediate re-collision
+               ball.nextX = ball.x;
+               ball.nextY = ball.y;
+               otherBall.nextX = otherBall.x;
+               otherBall.nextY = otherBall.y;
+               
+               // Elastic collision with realistic physics
+               const relativeVelX = ball.velocityX - otherBall.velocityX;
+               const relativeVelY = ball.velocityY - otherBall.velocityY;
+               const collisionNormalX = Math.cos(angle);
+               const collisionNormalY = Math.sin(angle);
+               
+               const relativeSpeed = relativeVelX * collisionNormalX + relativeVelY * collisionNormalY;
+               
+               if (relativeSpeed > 0) continue; // Objects separating
+               
+               const restitution = 0.8; // Bounce factor
+               const impulse = 2 * relativeSpeed / 2; // Assuming equal mass
+               
+               ball.velocityX -= impulse * collisionNormalX * restitution;
+               ball.velocityY -= impulse * collisionNormalY * restitution;
+               otherBall.velocityX += impulse * collisionNormalX * restitution;
+               otherBall.velocityY += impulse * collisionNormalY * restitution;
+           }
+       }
+
        // Adjust ball metadata  
        ball.x = ball.x + ball.velocityX;  
        ball.y = ball.y + ball.velocityY;  
@@ -545,29 +847,115 @@
        ballElements[index].style.cssText = `left: ${x}px; top: ${y}px; `;  
       });  
      }  
-     // Win detection  
-     if (  
-      balls.every(  
-       (ball) => distance2D(ball, { x: 350 / 2, y: 315 / 2 }) < 65 / 2  
-      )  
-     ) {  
-      noteElement.innerHTML = `Congrats, you did it!  
-       ${!hardMode ? "<p>Press H for hard mode</p>" : ""}  
-       `;  
-      noteElement.style.opacity = 1;  
-      gameInProgress = false;  
-     } else {  
-      previousTimestamp = timestamp;  
-      window.requestAnimationFrame(main);  
-     }  
+     // Ball center detection and individual respawn
+     const centerX = mazeWidth / 2;
+     const centerY = mazeHeight / 2;
+     const centerRadius = endSize / 2;
+     const originalPositions = [
+         { column: 0, row: 0 },
+         { column: 9, row: 0 },
+         { column: 0, row: 8 },
+         { column: 9, row: 8 }
+     ];
+     
+     // Check how many balls are simultaneously in the center (using ball center position)
+     let ballsCurrentlyInCenter = 0;
+     let ballsToRespawn = [];
+     
+     balls.forEach((ball, index) => {
+         // Use ball center position for collision detection
+         const ballCenterX = ball.x + (ballSize / 2);
+         const ballCenterY = ball.y + (ballSize / 2);
+         const distanceToCenter = distance2D({ x: ballCenterX, y: ballCenterY }, { x: centerX, y: centerY });
+         
+         // Check if ball center is within target radius
+         if (distanceToCenter <= centerRadius) {
+             ballsCurrentlyInCenter++;
+             ballsToRespawn.push(index);
+         }
+     });
+     
+     // Award points based on simultaneous balls in center (exclusive scoring - only once per state change)
+     if (ballsCurrentlyInCenter > 0 && ballsCurrentlyInCenter !== lastScoringState) {
+         let points = 0;
+         if (ballsCurrentlyInCenter === 1) points = 10;
+         else if (ballsCurrentlyInCenter === 2) points = 20;
+         else if (ballsCurrentlyInCenter === 3) points = 50;
+         else if (ballsCurrentlyInCenter === 4) points = 100;
+         
+         // Award points immediately (exclusive scoring per achievement)
+         updateScore(points);
+         
+         // Update last scoring state to prevent duplicate scoring
+         lastScoringState = ballsCurrentlyInCenter;
+         
+         // Instantly vanish and respawn all balls that reached the center
+         ballsToRespawn.forEach(index => {
+             if (index < originalPositions.length) {
+                 const pos = originalPositions[index];
+                 // Instant teleport to starting position
+                 balls[index].x = pos.column * (wallW + pathW) + (wallW / 2 + pathW / 2);
+                 balls[index].y = pos.row * (wallW + pathW) + (wallW / 2 + pathW / 2);
+                 // Reset velocity for clean respawn
+                 balls[index].velocityX = 0;
+                 balls[index].velocityY = 0;
+             }
+         });
+         
+         // Reset counter after scoring
+         ballsInCenter = 0;
+     } else if (ballsCurrentlyInCenter === 0) {
+         // Reset scoring state when no balls are in center
+         lastScoringState = 0;
+     }
+     
+     // Continue game loop
+     previousTimestamp = timestamp;
+     window.requestAnimationFrame(main);  
     } catch (error) {  
-     if (error.message == "The ball fell into a hole") {  
-      noteElement.innerHTML = `A ball fell into a black hole! Press space to reset the game.  
-       <p>  
-        Back to easy? Press E  
-       </p>`;  
-      noteElement.style.opacity = 1;  
-      gameInProgress = false;  
-     } else throw error;  
+     console.error("Game error:", error);
+     endGame("An error occurred!");
     }  
-   }  
+   }
+
+   // Mode Selection Functions
+   const showModeSelection = () => {
+       document.getElementById('mode-selection').classList.remove('hide');
+       document.querySelectorAll('.game-element').forEach(el => {
+           el.style.display = 'none';
+           el.classList.remove('show');
+       });
+       modeSelected = false;
+   };
+
+   const hideModeSelection = () => {
+       document.getElementById('mode-selection').classList.add('hide');
+       document.querySelectorAll('.game-element').forEach(el => {
+           el.style.display = 'block';
+           el.classList.add('show');
+       });
+       modeSelected = true;
+   };
+
+   const startGameMode = (isHardMode) => {
+       hardMode = isHardMode;
+       hideModeSelection();
+       resetGame();
+   };
+
+   // Mode selection event listeners
+   document.addEventListener('DOMContentLoaded', () => {
+       const easyModeBtn = document.getElementById('easy-mode-btn');
+       const hardModeBtn = document.getElementById('hard-mode-btn');
+       
+       if (easyModeBtn) {
+           easyModeBtn.addEventListener('click', () => startGameMode(false));
+       }
+       
+       if (hardModeBtn) {
+           hardModeBtn.addEventListener('click', () => startGameMode(true));
+       }
+       
+       // Show mode selection on page load
+       showModeSelection();
+   });  

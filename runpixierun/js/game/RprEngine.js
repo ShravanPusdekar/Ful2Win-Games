@@ -167,7 +167,7 @@ GAME.RprEngine.prototype.pickup = function()
 {
     if(this.steve.isDead) return; 
         
-    this.score += 10;
+    this.score += 5; // Changed from 10 to 5 points per pickup
     
 	if(this.joyrideMode)
 	{
@@ -182,7 +182,9 @@ GAME.RprEngine.prototype.pickup = function()
     FidoAudio.stop('pickup');
     FidoAudio.play('pickup');
     
-	if(this.pickupCount >= 50 * this.bulletMult && !this.steve.isDead)
+	// Power-up activates at 1000 points (200 pickups × 5 points)
+	// Then every 1000 points after (bulletMult increases by 0.3 each time)
+	if(this.pickupCount >= 200 * this.bulletMult && !this.steve.isDead)
 	{
 		this.pickupCount = 0;
 		this.joyrideMode = true;

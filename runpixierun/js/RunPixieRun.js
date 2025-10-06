@@ -47,14 +47,15 @@ var gameLoop = false;
 var thrustLoop = false;
 var thrusters = 0;
 var thrustersVolume = 0;
-var pauseButton = false;
-var pauseScreen = false;
+// REMOVED: pauseButton, pauseScreen, resumeButton, restartButton
+var soundToggleButton = false; // New standalone sound button
+var isSoundMuted = false;
 
-var resumeButton = false;
-var restartButton = false;
-var soundOnButton = false;
-var soundOffButton = false;
-var sound = true;
+// Timer variables
+var gameTimer = 120; // 2 minutes in seconds
+var timerText = false; // Timer display (sprite-based numbers)
+var timerColon = false; // Timer colon (text-based for clarity)
+var timerActive = false; // Timer running state
 
 function onReady()
 {
@@ -164,39 +165,11 @@ function onTap(event)
             });
         }
         else if(gameMode === GAME_MODE.GAME_OVER)
-        {   console.log("game is over");
-            interactive = false;
-            console.log("game is over");
-            game.view.stage.addChild(black);
-            
-            TweenLite.to(black, 0.3, {
-                alpha : 1, 
-                onComplete : function()
-                {   
-                    game.steve.normalMode();
-                    game.joyrideComplete();
-                    
-                    game.steve.position.x = 0;
-                    GAME.camera.x = game.steve.position.x - 100;
-                    game.reset();
-                    logo.visible = false;
-                    gameMode = GAME_MODE.COUNT_DOWN;
-                    
-                    TweenLite.killTweensOf(GAME.camera);
-                    GAME.camera.zoom = 1;
-
-                    TweenLite.to(black, 0.3, {
-                        alpha:0, 
-                        onComplete:function()
-                        {
-                            logo.visible = false;
-                            game.start();
-                            FidoAudio.fadeIn('gameMusic');
-                            countdown.startCountDown(onCountdownComplete);
-                        }
-                    });
-                }
-            });
+        {
+            // DISABLED: Automatic restart on tap removed
+            // Game Over screen now remains static and waits for external navigation
+            console.log("Game Over - tap ignored, waiting for external input");
+            return; // Prevent any action on Game Over screen
         }
         else
         {
@@ -266,90 +239,63 @@ function init()
     countdown = new GAME.Countdown();
     this.game.view.hud.addChild(countdown);
     
-    pauseButton = PIXI.Sprite.fromFrame("assets/hud/pause.png");
-    pauseButton.interactive = true;
-    pauseButton.anchor.x = 0.5;
-    pauseButton.anchor.y = 0.5;
-    pauseButton.alpha = 0;
-    pauseButton.visible = false;
-    pauseButton.type = "button";
+    // REMOVED: Pause button and pause screen (no longer needed)
+    // REMOVED: Resume and restart buttons (pause menu removed)
     
-    pauseScreen = PIXI.Sprite.fromImage("assets/hud/pausedPanel.png");
-    pauseScreen.anchor.x = 0.5;
-    pauseScreen.anchor.y = 0.5;
-    pauseScreen.scale.x = 1.5;
-    pauseScreen.scale.y = 1.5;
-    pauseScreen.alpha = 0;
-    pauseScreen.visible = false;
+    // Standalone Sound Toggle Button (top-left corner)
+    soundToggleButton = PIXI.Sprite.fromImage("assets/hud/soundOn.png");
+    soundToggleButton.anchor.x = 0.5;
+    soundToggleButton.anchor.y = 0.5;
+    soundToggleButton.scale.x = 0.8; // Slightly smaller for top-left placement
+    soundToggleButton.scale.y = 0.8;
+    soundToggleButton.alpha = 1; // Always visible
+    soundToggleButton.interactive = true;
+    soundToggleButton.type = "button";
     
-    // Buttons
-    resumeButton = PIXI.Sprite.fromImage("assets/hud/ContinuePlay.png");
-    resumeButton.anchor.x = 0.5;
-    resumeButton.anchor.y = 0.5;
-    resumeButton.scale.x = 0;
-    resumeButton.scale.y = 0;
-    resumeButton.alpha = 0;
-    resumeButton.interactive = true;
-    
-    resumeButton.touchstart = resumeButton.mousedown = function()
-    {
-        onResumePressed();
-    }
-    
-    restartButton = PIXI.Sprite.fromImage("assets/hud/RestartPlay.png");
-    restartButton.anchor.x = 0.5;
-    restartButton.anchor.y = 0.5;
-    restartButton.scale.x = 0;
-    restartButton.scale.y = 0;
-    restartButton.alpha = 0;
-    restartButton.interactive = true;
-    
-    restartButton.touchstart = restartButton.mousedown = function(event)
+    soundToggleButton.touchstart = soundToggleButton.mousedown = function(event)
     {
         event.originalEvent.preventDefault();
-        onRestartPressed();
+        onSoundToggle();
     }
     
-    soundOffButton = PIXI.Sprite.fromImage("assets/hud/soundOff.png");
-    soundOffButton.anchor.x = 0.5;
-    soundOffButton.anchor.y = 0.5;
-    soundOffButton.scale.x = 0;
-    soundOffButton.scale.y = 0;
-    soundOffButton.alpha = 0;
-    soundOffButton.interactive = true;
+    this.game.view.stage.addChild(soundToggleButton);
     
-    soundOffButton.touchstart = soundOffButton.mousedown = function(event)
-    {
-        event.originalEvent.preventDefault();
-        onSoundOffPressed();
-    }
+    // Timer Display (top-center) - Using sprite-based numbers like the score
+    timerText = new GAME.Score(); // Reuse the Score class for consistent font style
+    timerText.position.x = 0; // Will be centered in resize()
+    timerText.position.y = 30;
+    timerText.alpha = 0; // Hidden initially, shown when game starts
     
-    soundOnButton = PIXI.Sprite.fromImage("assets/hud/soundOn.png");
-    soundOnButton.anchor.x = 0.5;
-    soundOnButton.anchor.y = 0.5;
-    soundOnButton.scale.x = 0;
-    soundOnButton.scale.y = 0;
-    soundOnButton.alpha = 0;
-    soundOnButton.interactive = true;
+    // CRITICAL: Override setScore to prevent comma formatting on timer
+    timerText.originalSetScore = timerText.setScore;
+    timerText.setScore = function(score) {
+        // Block setScore calls on timer - use updateTimerDisplay instead
+        console.warn("[Timer] setScore blocked - use updateTimerDisplay");
+    };
     
-    soundOnButton.touchstart = soundOnButton.mousedown = function(event)
-    {
-        event.originalEvent.preventDefault();
-        onSoundOnPressed();
-    }
-        
-    this.game.view.stage.addChild(pauseScreen);
-    this.game.view.stage.addChild(resumeButton);
-    this.game.view.stage.addChild(restartButton);
-    this.game.view.stage.addChild(soundOffButton);
-    this.game.view.stage.addChild(soundOnButton);
-    this.game.view.stage.addChild(pauseButton);
-
-    pauseButton.mousedown = pauseButton.touchstart = function(event)
-    {
-        event.originalEvent.preventDefault();
-        onPaused();
-    }
+    // Create TEXT-BASED COLON for clear separation - matching green gradient style
+    timerColon = new PIXI.Text(":", {
+        font: "bold 72px 'Arial', 'Helvetica', sans-serif",
+        fill: "#B0FF00", // Bright lime green (solid color for better rendering)
+        stroke: "#004400",
+        strokeThickness: 4,
+        dropShadow: true,
+        dropShadowColor: "#000000",
+        dropShadowBlur: 4,
+        dropShadowAngle: Math.PI / 4,
+        dropShadowDistance: 2,
+        lineJoin: 'round'
+    });
+    timerColon.anchor.x = 0.5;
+    timerColon.anchor.y = 0.5; // Center anchor
+    timerColon.alpha = 0; // Hidden initially
+    timerColon.visible = false; // Start hidden
+    timerText.addChild(timerColon); // Add as child so it moves with timer
+    
+    console.log("[Timer Init] Colon created:", timerColon.text);
+    
+    this.game.view.hud.addChild(timerText);
+    updateTimerDisplay("2:00"); // Initial display using sprite numbers
 
     this.game.view.container.mousedown = this.game.view.container.touchstart = function(event)
     {
@@ -368,205 +314,38 @@ function init()
     FidoAudio.play('runFast');
 }
 
-function onResumePressed()
-{
-    onPaused();
-}
+// REMOVED: onResumePressed, onRestartPressed (pause menu removed)
 
-function onRestartPressed()
+function onSoundToggle()
 {
-    onPaused();
-    game.steve.die();
-    game.gameover();
-}
-
-function onSoundOnPressed()
-{
-    FidoAudio.muteAll();
+    // Toggle sound on/off with visual feedback
+    soundToggleButton.scale.set(0.6);
     
-    TweenLite.to(soundOnButton.scale, 0.6, {
-        x : 0, 
-        y : 0, 
+    TweenLite.to(soundToggleButton.scale, 0.5, {
+        x : 0.8, 
+        y : 0.8, 
         ease : Elastic.easeOut
-    });
-    TweenLite.to(soundOnButton, 0.1, {
-        alpha: 0
-    });
-    TweenLite.to(soundOffButton.scale, 0.6, {
-        x : 1, 
-        y : 1, 
-        ease : Elastic.easeOut
-    });
-    TweenLite.to(soundOffButton, 0.1, {
-        alpha: 1
-    });
-}
-
-function onSoundOffPressed()
-{
-    FidoAudio.unMuteAll();
-    
-    TweenLite.to(soundOffButton.scale, 0.6, {
-        x : 0, 
-        y : 0, 
-        ease : Elastic.easeOut
-    });
-    TweenLite.to(soundOffButton, 0.1, {
-        alpha: 0
     });
     
-    TweenLite.to(soundOnButton.scale, 0.6, {
-        x : 1, 
-        y : 1, 
-        ease : Elastic.easeOut
-    });
-    TweenLite.to(soundOnButton, 0.1, {
-        alpha: 1
-    });
-}
-
-var prevState = false;
-
-function pauseEnded()
-{
-    pauseScreen.visible = false;
-    pauseScreen.scale.x = 1.5;
-    pauseScreen.scale.y = 1.5;
-    
-    resumeButton.alpha = 0;
-    resumeButton.visible = false;
-    restartButton.alpha = 0;
-    restartButton.visible = false;
-    soundOnButton.alpha = 0;
-    soundOnButton.visible = false;
-    soundOffButton.alpha = 0;
-    soundOffButton.visible = false;
-}
-
-function onPaused()
-{     
-    pauseButton.scale.set(0.5);
-
-    TweenLite.to(pauseButton.scale, 0.5, {
-        x : 1, 
-        y : 1, 
-        ease : Elastic.easeOut
-    });
-
-    if(gameMode === GAME_MODE.PAUSED)
+    if(isSoundMuted)
     {
-        game.steve.resume();
-        
-        interactive = true;
-        gameMode = prevState;
-        prevState = false;
-
-        TweenLite.to(soundOffButton.scale, 0.6, {
-            x : 0, 
-            y : 0, 
-            ease : Elastic.easeOut
-        });
-        TweenLite.to(soundOffButton, 0.1, {
-            alpha: 0
-        });
-        
-        TweenLite.to(soundOnButton.scale, 0.6, {
-            x : 0, 
-            y : 0, 
-            ease : Elastic.easeOut
-        });
-        TweenLite.to(soundOnButton, 0.1, {
-            alpha: 0
-        });
-        
-        TweenLite.to(resumeButton.scale, 0.6, {
-            x : 0, 
-            y : 0, 
-            ease : Elastic.easeOut
-        });
-        TweenLite.to(resumeButton, 0.1, {
-            alpha: 0
-        });
-
-        TweenLite.to(restartButton.scale, 0.6, {
-            x : 0, 
-            y : 0, 
-            ease : Elastic.easeOut
-        });
-        TweenLite.to(restartButton, 0.1, {
-            alpha: 0
-        });
-        
-        TweenLite.to(pauseScreen.scale, 1, {
-            x : 0, 
-            y : 0, 
-            ease : Elastic.easeOut
-        });
-        TweenLite.to(pauseScreen, 0.1, {
-            alpha: 0
-        });
+        // Unmute sound
+        FidoAudio.unMuteAll();
+        soundToggleButton.setTexture(PIXI.Texture.fromImage("assets/hud/soundOn.png"));
+        isSoundMuted = false;
+        console.log("[Sound] Unmuted");
     }
     else
     {
-        game.steve.stop();
-        prevState = gameMode;
-        gameMode = GAME_MODE.PAUSED;
-        interactive = false; 
-        
-        pauseScreen.visible = true;
-        
-        TweenLite.to(pauseScreen, 0.1, {
-            alpha : 1, 
-        });
-
-        TweenLite.to(pauseScreen.scale, 0.6, {
-            x : 1, 
-            y : 1, 
-            ease : Elastic.easeOut
-        });
-        
-        if(FidoAudio.isMuted() === false)
-        {
-            TweenLite.to(soundOnButton.scale, 0.6, {
-                x : 1, 
-                y : 1, 
-                ease : Elastic.easeOut
-            });
-            TweenLite.to(soundOnButton, 0.1, {
-                alpha: 1
-            });
-        }
-        else
-        {
-            TweenLite.to(soundOffButton.scale, 0.6, {
-                x : 1, 
-                y : 1, 
-                ease : Elastic.easeOut
-            });
-            TweenLite.to(soundOffButton, 0.1, {
-                alpha: 1
-            });
-        }
-        
-        TweenLite.to(resumeButton, 0.1, {
-            alpha : 1, 
-        });
-        TweenLite.to(resumeButton.scale, 0.6, {
-            x : 1, 
-            y : 1, 
-            ease : Elastic.easeOut
-        });
-        
-        TweenLite.to(restartButton, 0.1, {
-            alpha : 1, 
-        });
-        TweenLite.to(restartButton.scale, 0.6, {
-            x : 1, 
-            y : 1, 
-            ease : Elastic.easeOut
-        });
-    }  
+        // Mute sound
+        FidoAudio.muteAll();
+        soundToggleButton.setTexture(PIXI.Texture.fromImage("assets/hud/soundOff.png"));
+        isSoundMuted = true;
+        console.log("[Sound] Muted");
+    }
 }
+
+// REMOVED: pauseEnded() and onPaused() functions (pause functionality removed)
 
 function onIntroFaded()
 {
@@ -576,29 +355,44 @@ function onIntroFaded()
 function onGameover()
 {
     console.log("game is over");
+    
+    // Stop timer
+    timerActive = false;
+    
     // Print the score on game over
     if (game && typeof game.score !== "undefined") {
-        const origin = window.location.hostname.includes("localhost")
-  ? "http://localhost:5173"
-  : "https://fulboost.fun";
-
-window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*");
+        // Send GAME_OVER message to parent window (preserved as required)
+        window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*");
         console.log("Score: this run", game.score);
     } else {
         console.log("Score variable not found.");
     }
-    pauseButton.interactive = false;
+    // REMOVED: pauseButton hide logic (button no longer exists)
     FidoAudio.setVolume('thrusters', 0);
-    TweenLite.to(pauseButton, 0.6, {
-        alpha : 0,
-        onComplete : function()
-        {
-            pauseButton.visible = false;
-        }
-    });
     
     gameMode = GAME_MODE.GAME_OVER;
     interactive = false;
+    
+    // Apply blur filter after 1 second delay
+    setTimeout(function() {
+        applyBlurEffect();
+    }, 1000);
+}
+
+function applyBlurEffect()
+{
+    console.log("[Blur] Applying blur filter to game screen");
+    
+    // Create PIXI blur filter
+    var blurFilter = new PIXI.BlurFilter();
+    blurFilter.blur = 10; // Blur strength
+    
+    // Apply blur to the entire game view
+    if(game && game.view && game.view.stage)
+    {
+        game.view.stage.filters = [blurFilter];
+        console.log("[Blur] Blur filter applied successfully");
+    }
 }
 
 function showGameover()
@@ -626,14 +420,18 @@ function onCountdownComplete()
 {
     interactive = true;
     gameMode = GAME_MODE.PLAYING;
-    pauseButton.visible = true;
-    TweenLite.to(pauseButton, 0.6, {
-        alpha : 1,
-        onComplete: function()
-        {
-            pauseButton.interactive = true;
-        }
+    // REMOVED: pauseButton show logic (button no longer exists)
+    
+    // Start the 2-minute timer
+    gameTimer = 120; // Reset to 2 minutes
+    timerActive = true;
+    
+    // Show timer with fade-in animation
+    TweenLite.to(timerText, 0.5, {
+        alpha: 1
     });
+    
+    console.log("[Timer] Started - 2:00 countdown");
 }
 
 function onTouchEnd(event)
@@ -710,32 +508,179 @@ function resize()
         
             game.view.resize(newWidth , h);
 
-            pauseButton.position.x = newWidth - 60;
-            pauseButton.position.y = h - 60;
-        
-        pauseScreen.position.x = (newWidth*0.5);
-        pauseScreen.position.y = h * 0.5;
-        
-        resumeButton.position.x = (newWidth*0.5);
-        resumeButton.position.y = (h*0.5);
-        
-        restartButton.position.x = (newWidth*0.5) + 125;
-        restartButton.position.y = (h*0.5);
-        
-        soundOffButton.position.x = (newWidth*0.5) - 125;
-        soundOffButton.position.y = (h*0.5);
-        
-        soundOnButton.position.x = (newWidth*0.5) - 125;
-        soundOnButton.position.y = (h*0.5);
+            // Position sound toggle button in top-left corner
+            soundToggleButton.position.x = 50; // 50px from left edge
+            soundToggleButton.position.y = 50; // 50px from top edge
+            
+            // Position timer in top-center (sprite-based, already centered in updateTimerDisplay)
+            timerText.position.x = newWidth / 2;
+            timerText.position.y = 30; // 30px from top, matching initial setup
     }
     
     GAME.width = (width /ratio);
     GAME.height = h;
 }
 
+// Format timer display (seconds to MM:SS)
+function formatTimer(seconds)
+{
+    var mins = Math.floor(seconds / 60);
+    var secs = Math.floor(seconds % 60);
+    var timeString = mins + ":" + (secs < 10 ? "0" : "") + secs;
+    
+    // AGGRESSIVE FIX: Force replace ANY comma with colon at source
+    timeString = timeString.replace(/,/g, ":");
+    
+    return timeString;
+}
+
+// Update timer display using sprite-based numbers with proper colon
+function updateTimerDisplay(timeString)
+{
+    // QUAD-LAYER FIX: Aggressively ensure colon display
+    // Layer 1: Replace commas AND apostrophes with colons
+    timeString = timeString.replace(/[,']/g, ":");
+    // Layer 2: Remove any non-time characters
+    timeString = timeString.replace(/[^0-9:]/g, "");
+    // Layer 3: Ensure format is correct (add colon if missing)
+    if(timeString.indexOf(":") === -1 && timeString.length >= 2) {
+        // If no colon found, insert it (e.g., "158" -> "1:58")
+        var len = timeString.length;
+        timeString = timeString.substring(0, len-2) + ":" + timeString.substring(len-2);
+    }
+    
+    console.log("[Timer Display] Rendering:", timeString); // Debug output
+    
+    // Split into minutes and seconds for separate rendering
+    var parts = timeString.split(":");
+    var minutes = parts[0] || "0";
+    var seconds = parts[1] || "00";
+    
+    // Combine without colon for sprite rendering
+    var numbersOnly = minutes + seconds;
+    
+    var glyphs = timerText.glyphs;
+    var digits = timerText.digits;
+    var position = 0;
+    var gap = -10; // Same gap as score display
+    var colonPosition = 0; // Track where to place text colon
+    
+    // Render only numbers (skip colon character)
+    var digitIndex = 0;
+    for(var i = 0; i < numbersOnly.length && digitIndex < digits.length; i++)
+    {
+        var char = numbersOnly[i];
+        var digit = digits[digitIndex];
+        
+        if(glyphs[char])
+        {
+            digit.visible = true;
+            digit.setTexture(glyphs[char]);
+            digit.scale.x = 1.0;
+            digit.scale.y = 1.0;
+            digit.position.x = position;
+            digit.position.y = 0;
+            position += digit.width + gap;
+            digitIndex++;
+            
+            // After minutes, mark colon position
+            if(i === minutes.length - 1)
+            {
+                colonPosition = position + 22; // Position for text colon (final spacing adjustment)
+                position += 42; // Add more space for colon (final adjustment for visual balance)
+            }
+        }
+    }
+    
+    // Hide unused sprite digits
+    for(var i = digitIndex; i < digits.length; i++)
+    {
+        digits[i].visible = false;
+    }
+    
+    // Center the timer display
+    var centerOffset = position / 2;
+    for(var i = 0; i < digits.length; i++)
+    {
+        digits[i].position.x -= centerOffset;
+    }
+    
+    // Position and show text-based colon (centered with numbers)
+    if(timerColon)
+    {
+        timerColon.position.x = colonPosition - centerOffset;
+        timerColon.position.y = 38; // Vertical offset to perfectly center with sprite numbers
+        timerColon.alpha = 1; // Make visible
+        timerColon.visible = true; // Ensure visibility
+        timerColon.updateText(); // Force text update
+        console.log("[Timer Colon] Position X:", colonPosition - centerOffset, "Y:", 38);
+    }
+}
+
 function update()
 {
     game.update();
+    
+    // Update timer if active and game is playing
+    if(timerActive && gameMode === GAME_MODE.PLAYING && !game.steve.isDead)
+    {
+        // Decrease timer: DELTA_TIME = 1.0 per frame at 60 FPS
+        // Since we want real seconds, and DELTA_TIME represents frames, divide by 60
+        // At 60 FPS: DELTA_TIME ≈ 1.0, so 1.0/60 = 0.0167 seconds per frame (correct!)
+        gameTimer -= GAME.time.DELTA_TIME / 60;
+        
+        // Update timer display
+        if(gameTimer > 0)
+        {
+            var timeString = formatTimer(gameTimer);
+            updateTimerDisplay(timeString);
+            
+            // Visual warning when under 30 seconds - make sprites flash red
+            if(gameTimer <= 30 && gameTimer > 0)
+            {
+                var flashIntensity = Math.sin(Date.now() / 200) * 0.5 + 0.5;
+                var tintColor = 0xFFFFFF - Math.floor(flashIntensity * 0x0000FF);
+                for(var i = 0; i < timerText.digits.length; i++)
+                {
+                    if(timerText.digits[i].visible)
+                    {
+                        timerText.digits[i].tint = tintColor;
+                    }
+                }
+            }
+            else
+            {
+                // Reset tint to white
+                for(var i = 0; i < timerText.digits.length; i++)
+                {
+                    timerText.digits[i].tint = 0xFFFFFF;
+                }
+            }
+        }
+        else
+        {
+            // Timer reached 0:00 - trigger Game Over
+            gameTimer = 0;
+            updateTimerDisplay("0:00");
+            // Tint red
+            for(var i = 0; i < timerText.digits.length; i++)
+            {
+                if(timerText.digits[i].visible)
+                {
+                    timerText.digits[i].tint = 0xFF0000;
+                }
+            }
+            timerActive = false;
+            
+            console.log("[Timer] Time's up! Triggering Game Over");
+            
+            // Trigger game over
+            if(!game.steve.isDead)
+            {
+                game.steve.die();
+            }
+        }
+    }
 
     if(!GAME.lowMode)
     {

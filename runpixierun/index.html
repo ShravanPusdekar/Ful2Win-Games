@@ -1,9 +1,17 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="offline.appcache">
+<html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta name="apple-mobile-web-app-capable" content="yes">
+        
+        <!-- WebView Compatibility Meta Tags -->
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="mobile-web-app-capable" content="yes">
+        
+        <!-- Allow iframe embedding - Remove X-Frame-Options restrictions -->
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors *;">
+        
         <link rel="stylesheet" href="css/normalize.css">
         <link rel="stylesheet" href="css/main.css">
         
@@ -117,7 +125,7 @@
         <script type="text/javascript" src="js/tweenlite/easing/EasePack.min.js"></script>
         <script type="text/javascript" src="js/stats.min.js"></script>
         <script type="text/javascript" src="js/pixi.js"></script>
-        <script type="text/javascript" src="js/GoodBoySplash.js"></script> 
+        <!-- REMOVED: GoodBoySplash.js - Loading screen disabled for immediate game start -->
         <script type="text/javascript" src="js/fido/Device.js"></script>
         <script type="text/javascript" src="js/fido/LocalStorage.js"></script>
         <script type="text/javascript" src="js/fido/FidoAudio.js"></script> 
@@ -156,6 +164,38 @@
         <script type="text/javascript" src="js/game/PixiDust.js"></script>
 
         <script>
+            // WebView Detection and Compatibility
+            (function() {
+                // Detect if running in WebView/iframe
+                window.isInIframe = (window.self !== window.top);
+                window.isWebView = /(WebView|wv|Version\/[\d\.]+.*Safari)/i.test(navigator.userAgent) || window.isInIframe;
+                
+                // Force enable features that might be disabled in WebView
+                if (window.isWebView) {
+                    console.log('[RunPixieRun] Running in WebView/iframe mode');
+                    
+                    // Ensure localStorage is available
+                    try {
+                        if (!window.localStorage) {
+                            console.warn('[RunPixieRun] localStorage not available, using fallback');
+                        }
+                    } catch(e) {
+                        console.warn('[RunPixieRun] localStorage access denied:', e);
+                    }
+                }
+                
+                // Prevent default touch behaviors that might interfere with game
+                document.addEventListener('touchmove', function(e) {
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                // Disable pull-to-refresh and overscroll
+                document.body.style.overscrollBehavior = 'none';
+                document.documentElement.style.overscrollBehavior = 'none';
+            })();
+            
             // Rotate phone functionality
             function checkOrientation() {
                 var rotateOverlay = document.getElementById('rotate-overlay');

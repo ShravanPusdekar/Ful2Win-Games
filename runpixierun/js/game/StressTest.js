@@ -3,6 +3,39 @@
  */
 var PIXI = PIXI || {};
 
+/***********
+ * SpritePool - Moved from GoodBoySplash.js for standalone functionality
+ */
+function SpritePool ()
+{
+    if (SpritePool._isBirth)
+        throw new Error("This class is a singleton!");
+    else
+    {
+        SpritePool._instance = this;
+        SpritePool._isBirth = true;
+    };
+    var _pool = [];
+    this.get = function (frameId)
+    {
+        for (var i in _pool)
+        {
+            if (_pool[i].texture === PIXI.TextureCache[frameId])
+            return _pool.splice(i, 1)[0];
+        }
+        return PIXI.Sprite.fromFrame(frameId);
+    };
+    this.recycle = function (sprite)
+    {
+        _pool.push(sprite);
+    }
+};
+SpritePool._isBirth = false;
+SpritePool.getInstance = function ()
+{
+    return SpritePool._instance != null ? SpritePool._instance : new SpritePool();
+};
+
 PIXI.StressTest = function(callback)
 {
     this.Device = new Fido.Device();
@@ -34,13 +67,16 @@ PIXI.StressTest = function(callback)
     
     document.body.appendChild(this.renderer.view);
     
+    // Hide stress test canvas immediately - no visible loading screen
+    this.renderer.view.style.display = 'none';
+    
     this.stage.touchstart = this.stage.mousedown = function(event)
     {
         event.originalEvent.preventDefault();
     }
 
 
-    this.duration = 3;
+    this.duration = 0; // Set to 0 for instant game start - no loading screen
 
     var scope = this;
     this.texture = PIXI.Texture.fromImage("img/testImage.png");
@@ -76,23 +112,8 @@ PIXI.StressTest.prototype.begin = function()
     this.graphics2.drawRect(0, 0, this.width, this.height);
     this.stage.addChild(this.graphics2);
     
-    var logo = new PIXI.Sprite(PIXI.Texture.fromImage('img/goodboy_logo.png'));
-        logo.anchor.x = 0.5;
-        logo.anchor.y = 0.5;
-        logo.position.x = this.width * 0.5;
-        logo.position.y = this.height * 0.48;
-        
-    if(this.Device.cocoonJS)
-    {
-        logo.scale.set(1);
-        logo.position.y = this.height * 0.47;
-    }
-    else
-    {
-        logo.scale.set(1);
-    }
-        this.stage.addChild(logo);
-
+    // REMOVED: Logo display - Loading screen disabled for immediate game start
+    
     this.renderer.render(this.stage);
 
     this.startTime = Date.now();

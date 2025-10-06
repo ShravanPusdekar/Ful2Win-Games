@@ -124,16 +124,16 @@ let pointerIsDown = false;
 let pointerScreen = { x: 0, y: 0 };
 // Same as `pointerScreen`, but converted to scene coordinates in rAF.
 let pointerScene = { x: 0, y: 0 };
-// Minimum speed of pointer before "hits" are counted.
-const minPointerSpeed = 60;
+// Enhanced hit detection for smoother gameplay
+const minPointerSpeed = 45; // Reduced for more responsive hits
 // The hit speed affects the direction the target post-hit. This number dampens that force.
-const hitDampening = 0.1;
+const hitDampening = 0.12; // Slightly increased for better feedback
 // Backboard receives shadows and is the farthest negative Z position of entities.
 const backboardZ = -400;
 const shadowColor = '#262e36';
-// How much air drag is applied to standard objects
-const airDrag = 0.022;
-const gravity = 0.3;
+// Enhanced physics for smoother gameplay
+const airDrag = 0.018; // Reduced for smoother movement
+const gravity = 0.4; // Increased for more responsive feel
 // Spark config
 const sparkColor = 'rgba(170,221,255,.9)';
 const sparkThickness = 2.2;
@@ -216,8 +216,8 @@ const state = {
 		initialTime: 60
 	},
 	menus: {
-		// Set to `null` to hide all menus
-		active: MENU_MAIN
+		// Set to `null` to hide all menus - start game immediately
+		active: null
 	}
 };
 
@@ -1580,16 +1580,71 @@ function endGame() {
     }
     state.game.startTime = 0; // Stop the timer
     
-    // Stop background music and play game over sound
-    stopBackgroundMusic();
-    const gameOverSound = document.getElementById('gameOverSound');
-    if (gameOverSound) {
-        gameOverSound.currentTime = 0;
-        gameOverSound.volume = 0.5; // Set volume to 50%
-        gameOverSound.play().catch(e => console.log('Game over sound play failed:', e));
+    // Stop ALL audio immediately
+    stopAllAudio();
+    
+    // Apply blur effect to canvas and HUD
+    const canvas = document.querySelector('#c');
+    const hud = document.querySelector('.hud');
+    const warningMessage = document.querySelector('.warning-message');
+    const gameOverOverlay = document.getElementById('game-over-overlay');
+    
+    if (canvas) canvas.classList.add('game-over-blur');
+    if (hud) hud.classList.add('game-over-blur');
+    if (warningMessage) warningMessage.classList.add('game-over-blur');
+    if (gameOverOverlay) gameOverOverlay.classList.add('active');
+    
+    // Completely disable all game interactions and halt game logic
+    canvas.style.pointerEvents = 'none';
+    gameSpeed = 0; // Halt all game animations and physics
+    
+    // Clear all active targets to prevent further interactions
+    while(targets.length) {
+        const target = targets.pop();
+        returnTarget(target);
+    }
+    
+    // Send final score to parent window
+    try {
+        window.parent.postMessage({ 
+            type: "GAME_OVER", 
+            score: state.game.score 
+        }, "*");
+    } catch (e) {
+        console.log('PostMessage failed:', e);
     }
     
     setActiveMenu(MENU_SCORE);
+}
+
+function stopAllAudio() {
+    // Stop background music
+    const bgMusic = document.getElementById('bgMusic');
+    if (bgMusic) {
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+    }
+    
+    // Stop bomb explosion sound
+    const bombSound = document.getElementById('bombExplosion');
+    if (bombSound) {
+        bombSound.pause();
+        bombSound.currentTime = 0;
+    }
+    
+    // Stop game over sound
+    const gameOverSound = document.getElementById('gameOverSound');
+    if (gameOverSound) {
+        gameOverSound.pause();
+        gameOverSound.currentTime = 0;
+    }
+    
+    // Stop splatter sound
+    const splatterSound = document.getElementById('splatterSound');
+    if (splatterSound) {
+        splatterSound.pause();
+        splatterSound.currentTime = 0;
+    }
 }
 
 ////////////////////////
@@ -1752,10 +1807,9 @@ function tick(width, height, simTime, simSpeed, lag) {
 		}
 
 
-		// If pointer is moving really fast, we want to hittest multiple points along the path.
-		// We can't use scaled pointer speed to determine this, since we care about actual screen
-		// distance covered.
-		const hitTestCount = Math.ceil(pointerSpeed / targetRadius * 2);
+		// Enhanced hit detection: test multiple points along pointer path for better responsiveness
+		// Increased multiplier for more precise collision detection
+		const hitTestCount = Math.ceil(pointerSpeed / targetRadius * 2.5);
 		// Start loop at `1` and use `<=` check, so we skip 0% and end up at 100%.
 		// This omits the previous point position, and includes the most recent.
 		for (let ii=1; ii<=hitTestCount; ii++) {
@@ -1780,9 +1834,11 @@ function tick(width, height, simTime, simSpeed, lag) {
 					const sparkSpeed = 7 + pointerSpeedScaled * 0.125;
 
 					if (target.isBombBlock) {
-						// For bomb blocks, create explosion effect and end game
-						createBurst(target, forceMultiplier);
-						sparkBurst(hitX, hitY, 12, sparkSpeed * 1.5);
+						// Enhanced bomb explosion effect with dramatic visuals
+						createBurst(target, forceMultiplier * 1.5);
+						sparkBurst(hitX, hitY, 16, sparkSpeed * 2);
+						// Additional explosion rings for dramatic effect
+						sparkBurst(hitX, hitY, 8, sparkSpeed * 0.8);
 						targets.splice(i, 1);
 						returnTarget(target);
 						// Play bomb explosion sound
@@ -1801,6 +1857,7 @@ function tick(width, height, simTime, simSpeed, lag) {
 						playSplatterSound();
 
 						if (target.health <= 0) {
+							// Instant destruction and removal for responsive gameplay
 							incrementCubeCount(1);
 							createBurst(target, forceMultiplier);
 							sparkBurst(hitX, hitY, 8, sparkSpeed);
@@ -1809,6 +1866,7 @@ function tick(width, height, simTime, simSpeed, lag) {
 								spawnTime = 0;
 								spawnExtra = 2;
 							}
+							// Immediate removal for instant feedback
 							targets.splice(i, 1);
 							returnTarget(target);
 						} else {
@@ -1817,6 +1875,7 @@ function tick(width, height, simTime, simSpeed, lag) {
 							updateTargetHealth(target, 0);
 						}
 					} else {
+						// Light touch scoring
 						incrementScore(5);
 						sparkBurst(hitX, hitY, 3, sparkSpeed);
 					}
@@ -2154,13 +2213,13 @@ function setupCanvas() {
 		// Update the game timer
 		updateTimer();
 
-		// make sure negative time isn't reported (first frame can be whacky)
+		// Enhanced frame time handling for smoother gameplay
 		if (frameTime < 0) {
-			frameTime = 17;
+			frameTime = 16.67; // Target 60fps
 		}
-		// - cap minimum framerate to 15fps[~68ms] (assuming 60fps[~17ms] as 'normal')
-		else if (frameTime > 68) {
-			frameTime = 68;
+		// Cap minimum framerate to 20fps for better responsiveness
+		else if (frameTime > 50) {
+			frameTime = 50;
 		}
 
 		const halfW = width / 2;
@@ -2280,3 +2339,23 @@ if ('PointerEvent' in window) {
 }
 
 setupCanvas();
+
+// Initialize game immediately on load
+document.addEventListener('DOMContentLoaded', function() {
+    // Start the game immediately
+    setGameMode(GAME_MODE_RANKED);
+    setActiveMenu(null);
+    resetGame();
+});
+
+// Also initialize if DOM is already loaded
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for it
+} else {
+    // DOM is already loaded - start immediately
+    setTimeout(() => {
+        setGameMode(GAME_MODE_RANKED);
+        setActiveMenu(null);
+        resetGame();
+    }, 100); // Small delay to ensure all elements are ready
+}

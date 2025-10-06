@@ -172,7 +172,8 @@ GAME.RprView.prototype.update = function()
 	this.lava.setPosition(GAME.camera.x + 4000);
 	this.bestScore.update();	
     this.score.setScore(Math.round(this.engine.score));
-	this.powerBar.bar.scale.x = ( (this.engine.pickupCount/(50 *  this.engine.bulletMult) )*(248/252) )
+	// Updated power bar calculation for 1000 point threshold (200 pickups)
+	this.powerBar.bar.scale.x = ( (this.engine.pickupCount/(200 *  this.engine.bulletMult) )*(248/252) )
 	this.renderer.render(this.stage);
 }
 

@@ -20,10 +20,26 @@ GAME.SegmentManager = function(engine)
 	this.chillMode = true;
 	this.last = 0; 
 	this.position = 0;
+	
+	// Randomize segment order on initialization for unpredictable gameplay
+	this.shuffleSegments();
 }
 
 // constructor
 GAME.SegmentManager.constructor = GAME.SegmentManager;
+
+GAME.SegmentManager.prototype.shuffleSegments = function()
+{
+	// Fisher-Yates shuffle algorithm for true randomization
+	var array = this.sections;
+	for (var i = array.length - 1; i > 0; i--) {
+		var j = Math.floor(Math.random() * (i + 1));
+		var temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+	console.log("[SegmentManager] Segments shuffled for random gameplay");
+}
 
 GAME.SegmentManager.prototype.reset = function(dontReset)
 {
@@ -31,6 +47,9 @@ GAME.SegmentManager.prototype.reset = function(dontReset)
 	if(dontReset)this.count = 0;
 	this.currentSegment = this.startSegment;
 	this.currentSegment.start = -200;
+	
+	// Re-shuffle segments on reset for different experience each game
+	this.shuffleSegments();
 	
 	for ( var i = 0; i < this.currentSegment.floor.length; i++) 
 	{
@@ -64,7 +83,17 @@ GAME.SegmentManager.prototype.update = function()
 		}
 		
 		
-		var nextSegment = this.sections[this.count % this.sections.length];
+		// RANDOMIZED: Pick segments with variation instead of pure sequential
+		// 70% chance to use sequential, 30% chance to pick random segment
+		var nextSegment;
+		if(Math.random() < 0.7) {
+			// Sequential with shuffled array
+			nextSegment = this.sections[this.count % this.sections.length];
+		} else {
+			// Random segment selection for extra unpredictability
+			var randomIndex = Math.floor(Math.random() * this.sections.length);
+			nextSegment = this.sections[randomIndex];
+		}
 //		if(this.chillMode)nextSegment =  this.sections[0];
 	//	console.log( this.sections.length)
 		// section finished!
@@ -83,7 +112,17 @@ GAME.SegmentManager.prototype.update = function()
 		
 		for ( var i = 0; i < length; i++) 
 		{
-			this.engine.enemyManager.addEnemy(this.currentSegment.start + blocks[i*2], blocks[(i*2)+1]);
+			// Randomly skip 10% of obstacles for variation
+			if(Math.random() < 0.1) continue;
+			
+			// Add slight random variation to enemy X position (±20 pixels)
+			var xVariation = (Math.random() - 0.5) * 40;
+			// Add slight random variation to enemy Y position (±15 pixels)
+			var yVariation = (Math.random() - 0.5) * 30;
+			this.engine.enemyManager.addEnemy(
+				this.currentSegment.start + blocks[i*2] + xVariation, 
+				blocks[(i*2)+1] + yVariation
+			);
 		}
 		
 		var pickups = this.currentSegment.coins;
@@ -91,7 +130,17 @@ GAME.SegmentManager.prototype.update = function()
 		
 		for ( var i = 0; i < length; i++) 
 		{
-			this.engine.pickupManager.addPickup(this.currentSegment.start + pickups[i*2], pickups[(i*2)+1]);
+			// Randomly skip 5% of pickups for variation (less than obstacles)
+			if(Math.random() < 0.05) continue;
+			
+			// Add random variation to pickup positions for unpredictability
+			// X variation: ±30 pixels, Y variation: ±20 pixels
+			var xVariation = (Math.random() - 0.5) * 60;
+			var yVariation = (Math.random() - 0.5) * 40;
+			this.engine.pickupManager.addPickup(
+				this.currentSegment.start + pickups[i*2] + xVariation, 
+				pickups[(i*2)+1] + yVariation
+			);
 		}
 		
 		this.count ++;

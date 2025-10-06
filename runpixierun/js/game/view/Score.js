@@ -24,7 +24,8 @@ GAME.Score = function()
 			7:"number_07.png",
 			8:"number_08.png",
 			9:"number_09.png",
-			",":"number_comma.png"
+			",":"number_comma.png",
+			":":"number_comma.png" // Use comma sprite for colon (will be styled differently)
 	}
 	
 	for(i in this.glyphs)this.glyphs[i] = PIXI.Texture.fromFrameId(this.glyphs[i]);
