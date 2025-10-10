@@ -111,10 +111,10 @@ function createMainMenu() {
 		var mainMenu = stage.getChildByName("mainMenu");
 		mainMenu.getChildByName("loadingLabel").visible = false;
 
-		var playBtn = createButton(spriteSheets["ui"], localization.play, createTutorial);
-		playBtn.x = 240;
-		playBtn.y = 290;
-		mainMenu.addChild(playBtn);
+		// AUTO-ADVANCE: Skip play button and go directly to tutorial
+		setTimeout(function() {
+			createGame(null); // Skip tutorial and go directly to game
+		}, 500); // Small delay to show loading completion
 	}, 250);
 }
 
@@ -150,6 +150,58 @@ function createTutorial() {
 		});
 }
 
+// NEW FUNCTION: Show tutorial during gameplay (help button)
+function showTutorial(ces) {
+	playSound("button");
+	
+	// Pause the game
+	ces.stop();
+	
+	// Create tutorial overlay
+	var tutorialOverlay = new createjs.Container();
+	tutorialOverlay.name = "tutorialOverlay";
+	stage.addChild(tutorialOverlay);
+	
+	// Add semi-transparent background
+	var bg = new createjs.Shape();
+	bg.graphics.beginFill("rgba(0,0,0,0.7)").drawRect(0, 0, 480, 320);
+	tutorialOverlay.addChild(bg);
+	
+	// Add tutorial animation
+	var bitmapAnimation = new createjs.Sprite(spriteSheets["ui"]);
+	bitmapAnimation.gotoAndPlay("tutorial");
+	tutorialOverlay.addChild(bitmapAnimation);
+	
+	// Add tutorial label
+	var tutorialLabel = new createjs.Text(localization.tutorial, "50px gameFont", "#7269a8");
+	tutorialLabel.x = 240;
+	tutorialLabel.y = 85;
+	tutorialLabel.textAlign = "center";
+	tutorialLabel.textBaseline = 'middle';
+	tutorialOverlay.addChild(tutorialLabel);
+	
+	// Add "Click to continue" text
+	var continueLabel = new createjs.Text("Click to continue", "20px gameFont", "#ffffff");
+	continueLabel.x = 240;
+	continueLabel.y = 280;
+	continueLabel.textAlign = "center";
+	tutorialOverlay.addChild(continueLabel);
+	
+	// Make it clickable to close
+	tutorialOverlay.addEventListener("click", function() {
+		playSound("button");
+		stage.removeChild(tutorialOverlay);
+		ces.start(); // Resume the game
+	});
+	
+	// Fade in animation
+	tutorialOverlay.alpha = 0;
+	createjs.Tween.get(tutorialOverlay)
+		.to({
+			alpha: 1
+		}, 300, createjs.Ease.backOut);
+}
+
 function createGame(event) {
 	playSound("music");
 
@@ -173,6 +225,17 @@ function createGame(event) {
 
 	var onDieFunc = function(score) {
 		stopSound("music");
+		
+		// Add blur effect to entire screen
+		var gameContainer = stage.getChildByName("game");
+		if (gameContainer) {
+			gameContainer.filters = [new createjs.BlurFilter(8, 8, 1)];
+			gameContainer.cache(0, 0, stage.canvas.width, stage.canvas.height);
+			
+			// Send game over message immediately after blur effect is applied
+			window.parent.postMessage({ type: "GAME_OVER", score: score }, "*");
+		}
+		
 		guiLayer.getChildByName("gameOverContainer").visible = true;
 		guiLayer.getChildByName("gameOverContainer").getChildByName("gameOverScore").text = score;
 		createjs.Tween.get(guiLayer.getChildByName("gameOverContainer"))
@@ -261,26 +324,87 @@ function cleanupGameEvents() {
 }
 
 function createGUI(ces, layer) {
-	// Pause button
-	var rectPause = spriteSheets["ui"].getFrame(spriteSheets["ui"].getAnimation("pause_btn").frames[0]).rect;
-	var pauseBtn = new createjs.Sprite(spriteSheets["ui"]);
-	pauseBtn.name = "pauseBtn";
-	pauseBtn.snapToPixel = true;
-	pauseBtn.gotoAndStop("pause_btn");
-	pauseBtn.regX = rectPause.width / 2;
-	pauseBtn.regY = rectPause.height / 2;
-	pauseBtn.x = 34.5;
-	pauseBtn.y = 34.5;
-	pauseBtn.cursor = "pointer";
-	pauseBtn.addEventListener("click", function(e) {
+	// MUTE/UNMUTE BUTTON (replaces pause button)
+	if (!isChrome) {
+		var rectMute = spriteSheets["ui"].getFrame(spriteSheets["ui"].getAnimation("sound_btn_on").frames[0]).rect;
+		var muteBtn = new createjs.Sprite(spriteSheets["ui"]);
+		muteBtn.name = "muteBtn";
+		muteBtn.snapToPixel = true;
+		muteBtn.gotoAndStop("sound_btn_on");
+		muteBtn.regX = rectMute.width / 2;
+		muteBtn.regY = rectMute.height / 2;
+		muteBtn.x = 34.5;
+		muteBtn.y = 34.5;
+		muteBtn.cursor = "pointer";
+		muteBtn.visible = createjs.Sound.getVolume() == 1;
+		muteBtn.addEventListener("click", function(e) {
+			playSound("button");
+			layer.getChildByName("muteBtn").visible = false;
+			layer.getChildByName("unmuteBtn").visible = true;
+			createjs.Sound.setVolume(0);
+		});
+		layer.addChild(muteBtn);
+
+		var unmuteBtn = new createjs.Sprite(spriteSheets["ui"]);
+		unmuteBtn.name = "unmuteBtn";
+		unmuteBtn.snapToPixel = true;
+		unmuteBtn.gotoAndStop("sound_btn_off");
+		unmuteBtn.regX = rectMute.width / 2;
+		unmuteBtn.regY = rectMute.height / 2;
+		unmuteBtn.x = 34.5;
+		unmuteBtn.y = 34.5;
+		unmuteBtn.cursor = "pointer";
+		unmuteBtn.visible = createjs.Sound.getVolume() == 0;
+		unmuteBtn.addEventListener("click", function(e) {
+			layer.getChildByName("muteBtn").visible = true;
+			layer.getChildByName("unmuteBtn").visible = false;
+			createjs.Sound.setVolume(1);
+			playSound("button");
+		});
+		layer.addChild(unmuteBtn);
+	}
+
+	// HELP BUTTON (shows tutorial) - Using text-based button
+	var helpBtn = new createjs.Container();
+	helpBtn.name = "helpBtn";
+	
+	// Create circular background
+	var helpBg = new createjs.Shape();
+	helpBg.graphics.beginFill("#7269a8").drawCircle(0, 0, 20);
+	helpBg.graphics.beginStroke("#ffffff").setStrokeStyle(2).drawCircle(0, 0, 20);
+	helpBtn.addChild(helpBg);
+	
+	// Add "?" text - properly centered
+	var helpText = new createjs.Text("?", "24px gameFont", "#ffffff");
+	helpText.textAlign = "center";
+	helpText.textBaseline = "middle";
+	helpText.x = 0;
+	helpText.y = -2; // Slight adjustment to visually center the text
+	helpBtn.addChild(helpText);
+	
+	// Position the help button
+	helpBtn.x = 80;
+	helpBtn.y = 34.5;
+	helpBtn.cursor = "pointer";
+	
+	// Add click handler
+	helpBtn.addEventListener("click", function(e) {
 		playSound("button");
-		layer.getChildByName("pauseContainer").visible = true;
-		createjs.Tween.get(layer.getChildByName("pauseContainer")).to({
-			alpha: 1
-		}, 500, createjs.Ease.backOut);
-		ces.stop();
+		showTutorial(ces);
 	});
-	layer.addChild(pauseBtn);
+	
+	// Add hover effects
+	helpBtn.addEventListener("mouseover", function(e) {
+		helpBg.graphics.clear().beginFill("#8a7bb8").drawCircle(0, 0, 20);
+		helpBg.graphics.beginStroke("#ffffff").setStrokeStyle(2).drawCircle(0, 0, 20);
+	});
+	
+	helpBtn.addEventListener("mouseout", function(e) {
+		helpBg.graphics.clear().beginFill("#7269a8").drawCircle(0, 0, 20);
+		helpBg.graphics.beginStroke("#ffffff").setStrokeStyle(2).drawCircle(0, 0, 20);
+	});
+	
+	layer.addChild(helpBtn);
 
 	// Score
 	var rectBg = spriteSheets["ui"].getFrame(spriteSheets["ui"].getAnimation("score_container").frames[0]).rect;
@@ -434,19 +558,8 @@ function createGUI(ces, layer) {
 	gameOverScore.alpha = 0.8;
 	gameOverContainer.addChild(gameOverScore);
 
-	var exitGameOverBtn = createButton(spriteSheets["ui"], localization.replay, function(e) {
-		stopSound("music");
-		playSound("button");
-		cleanupGameEvents();
-		ces = null;
-		var game = stage.getChildByName("game");
-		stage.removeChild(game);
-		createGame(null);
-	});
-
-	exitGameOverBtn.x = 240;
-	exitGameOverBtn.y = 260;
-	gameOverContainer.addChild(exitGameOverBtn);
+	// REPLAY BUTTON REMOVED - No longer needed
+	// Game over will send postMessage to parent window instead
 	gameOverContainer.alpha = 0;
 	gameOverContainer.visible = false;
 }
