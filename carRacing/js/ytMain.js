@@ -116,8 +116,12 @@ function addMenuInterface () {
 	musicManager.init();
 	musicManager.play();
 	
-	var menuInterface = new ytMenuLayer();
-	addChild(menuInterface);
+	// TEMPORARY DEBUG: Test direct game start
+	// Uncomment the next line to bypass selection screens and test game directly
+	// console.log("DIRECT GAME TEST"); addGameInterface(0, "street_canyon"); return;
+	
+	// Skip the start screen and go directly to car selection
+	addOptionInterface();
 }
 
 function addOptionInterface() {
@@ -128,10 +132,70 @@ function addOptionInterface() {
 }
 
 function addGameInterface (car, place) {
-	// Ensure music continues playing
+	console.log("=== addGameInterface START ===");
+	console.log("Parameters - Car:", car, "Place:", place);
+	
+	// 1. Show the game canvas (in case it was hidden)
+	var canvas = document.querySelector('canvas');
+	if (canvas) {
+		canvas.style.display = 'block';
+		canvas.style.visibility = 'visible';
+		canvas.style.opacity = '1';
+		console.log("Canvas visibility ensured - display:", canvas.style.display);
+	} else {
+		console.error("Canvas not found!");
+	}
+	
+	// 2. Ensure the main container is visible
+	var container = document.getElementById('mylegend');
+	if (container) {
+		container.style.display = 'block';
+		container.style.visibility = 'visible';
+		container.style.opacity = '1';
+		console.log("Container visibility ensured - display:", container.style.display);
+	} else {
+		console.error("Container 'mylegend' not found!");
+	}
+	
+	// 3. Clear any existing game layers to prevent conflicts
+	try {
+		// Remove any existing children that might interfere
+		while (LGlobal.stage.numChildren > 0) {
+			LGlobal.stage.removeChildAt(0);
+		}
+		console.log("Cleared existing stage children");
+	} catch (e) {
+		console.log("Stage clearing not needed or failed:", e.message);
+	}
+	
+	// 4. Ensure music continues playing
 	musicManager.play();
+	
+	// 5. Validate parameters before creating game layer
+	if (typeof car === 'undefined' || typeof place === 'undefined') {
+		console.error("Invalid parameters - Car:", car, "Place:", place);
+		car = 0; // Default to BMW
+		place = "street_canyon"; // Default to CANYON
+		console.log("Using default parameters - Car:", car, "Place:", place);
+	}
+	
+	// 6. Create and add game interface
+	console.log("Creating ytGameLayer with validated parameters:", car, place);
 	var gameInterface = new ytGameLayer(car, place);
-	addChild(gameInterface);
+	
+	if (gameInterface) {
+		addChild(gameInterface);
+		console.log("Game interface created and added successfully");
+		
+		// 7. Ensure rendering is active
+		if (typeof LGlobal !== 'undefined' && LGlobal.stage) {
+			console.log("LufyLegend stage active, rendering should begin");
+		}
+	} else {
+		console.error("Failed to create game interface!");
+	}
+	
+	console.log("=== addGameInterface COMPLETE ===");
 }
 
 function addHelpInterface() {
