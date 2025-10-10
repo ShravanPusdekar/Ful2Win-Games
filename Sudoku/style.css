@@ -1,0 +1,748 @@
+:root {
+    --primary-color: #667eea;
+    --primary-hover: #5a6fd8;
+    --secondary-color: #f093fb;
+    --accent-color: #4facfe;
+    --success-color: #00d4aa;
+    --error-color: #ff6b6b;
+    --warning-color: #feca57;
+    --background-color: #f8fafc;
+    --container-bg-color: #ffffff;
+    --grid-border-color: #2d3748;
+    --cell-border-color: #e2e8f0;
+    --given-cell-color: #edf2f7;
+    --selected-cell-color: #bee3f8;
+    --user-cell-color: #e6fffa;
+    --text-color: #2d3748;
+    --light-text-color: #718096;
+    --given-text-color: #4a5568;
+    --user-text-color: #00695c;
+    --incorrect-text-color: #e53e3e;
+    --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-heavy: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+html {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+body {
+    font-family: 'Inter', 'Roboto', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 0;
+    color: var(--text-color);
+    padding: 20px;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    zoom: 1 !important;
+    transform: none !important;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    padding: 40px;
+    background: var(--container-bg-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow-heavy);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+h1, h2, h3 {
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+h2 {
+    font-size: 1.8rem;
+}
+
+h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+p {
+    color: var(--light-text-color);
+}
+
+/* Ensure maximum visibility for difficulty buttons on welcome screen */
+#welcome-screen .difficulty-btn {
+    background: linear-gradient(135deg, #667eea, #5a6fd8) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+    border: 3px solid rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+}
+
+.difficulty-btn, .control-btn {
+    padding: 14px 28px;
+    margin: 10px;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #ffffff !important;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+    background: linear-gradient(135deg, var(--primary-color, #667eea), var(--primary-hover, #5a6fd8)) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-medium);
+    position: relative;
+    overflow: hidden;
+    z-index: 10 !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    text-decoration: none !important;
+    line-height: 1.2 !important;
+}
+
+.difficulty-btn::before, .control-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.difficulty-btn:hover, .control-btn:hover {
+    background: linear-gradient(135deg, var(--primary-hover), var(--accent-color));
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.difficulty-btn:hover::before, .control-btn:hover::before {
+    left: 100%;
+}
+
+.difficulty-btn:active, .control-btn:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+}
+
+#lives-counter {
+    font-size: 1.4em;
+    background: linear-gradient(135deg, var(--error-color), var(--warning-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#sudoku-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    width: 100%;
+    max-width: 450px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    background-color: var(--container-bg-color);
+    border: 3px solid var(--grid-border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-medium);
+    position: relative;
+    box-sizing: border-box;
+}
+
+#player-grid, #solution-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    border: 2px solid #2d3748;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    position: relative;
+    box-sizing: border-box;
+}
+
+#sudoku-grid::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(102, 126, 234, 0.02) 25%, transparent 25%), 
+                linear-gradient(-45deg, rgba(102, 126, 234, 0.02) 25%, transparent 25%);
+    background-size: 20px 20px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: 500;
+    border: 1px solid var(--cell-border-color);
+    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+    background-color: #fff;
+}
+
+.cell:hover:not(.given) {
+    background-color: #f7fafc;
+    transform: scale(1.02);
+    box-shadow: var(--shadow-light);
+}
+
+.cell.given {
+    background-color: var(--given-cell-color);
+    font-weight: 700;
+    cursor: not-allowed;
+    color: var(--given-text-color);
+    position: relative;
+}
+
+.cell.given::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 6px;
+    height: 6px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+.cell.user-entered {
+    background-color: var(--user-cell-color);
+    color: var(--user-text-color);
+    font-weight: 600;
+    position: relative;
+}
+
+.cell.user-entered::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 2px;
+    background-color: var(--success-color);
+    border-radius: 1px;
+    opacity: 0.7;
+}
+
+.cell.selected {
+    background: linear-gradient(135deg, var(--selected-cell-color), #ceedff);
+    z-index: 3;
+}
+
+.cell.incorrect {
+    background-color: #fed7d7;
+    animation: shake 0.5s ease-in-out;
+}
+
+.cell.error {
+    background-color: #fed7d7;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+#number-buttons {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.number-btn {
+    width: 55px;
+    height: 55px;
+    font-size: 1.3em;
+    font-weight: 600;
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(135deg, var(--accent-color), #00d4aa);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.number-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+}
+
+.number-btn:hover {
+    background: linear-gradient(135deg, #00d4aa, var(--accent-color));
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+}
+
+.number-btn:hover::before {
+    width: 100%;
+    height: 100%;
+}
+
+.number-btn:active {
+    transform: translateY(0) scale(1.02);
+    box-shadow: var(--shadow-light);
+}
+
+/* Corrected grid borders for 3x3 subgrids */
+#sudoku-grid .cell:nth-child(3n):not(:nth-child(9n)) { border-right: 2px solid var(--grid-border-color); }
+#sudoku-grid .cell:nth-child(9n+1) { border-left: 1px solid var(--cell-border-color); }
+#sudoku-grid .cell:nth-child(n+19):nth-child(-n+27),
+#sudoku-grid .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid var(--grid-border-color); }
+#sudoku-grid .cell:nth-child(n+1):nth-child(-n+9),
+#sudoku-grid .cell:nth-child(n+19):nth-child(-n+27),
+#sudoku-grid .cell:nth-child(n+28):nth-child(-n+36),
+#sudoku-grid .cell:nth-child(n+37):nth-child(-n+45),
+#sudoku-grid .cell:nth-child(n+55):nth-child(-n+63),
+#sudoku-grid .cell:nth-child(n+64):nth-child(-n+72),
+#sudoku-grid .cell:nth-child(n+73):nth-child(-n+81) { border-top: 1px solid var(--cell-border-color); }
+#sudoku-grid .cell:nth-child(27n) { border-bottom: 1px solid var(--cell-border-color); }
+#sudoku-grid .cell:nth-child(18n) { border-bottom: 1px solid var(--cell-border-color); }
+
+/* Game Over grids - Enhanced 3x3 subgrid borders for traditional Sudoku look */
+#player-grid .cell:nth-child(3n):not(:nth-child(9n)),
+#solution-grid .cell:nth-child(3n):not(:nth-child(9n)) { 
+    border-right: 3px solid #2d3748 !important; 
+}
+
+#player-grid .cell:nth-child(n+19):nth-child(-n+27),
+#player-grid .cell:nth-child(n+46):nth-child(-n+54),
+#solution-grid .cell:nth-child(n+19):nth-child(-n+27),
+#solution-grid .cell:nth-child(n+46):nth-child(-n+54) { 
+    border-bottom: 3px solid #2d3748 !important; 
+}
+
+/* Enhanced visibility for 3x3 grid separation */
+#player-grid .cell:nth-child(6n):not(:nth-child(9n)):not(:nth-child(18n)):not(:nth-child(27n)):not(:nth-child(36n)):not(:nth-child(45n)):not(:nth-child(54n)):not(:nth-child(63n)):not(:nth-child(72n)):not(:nth-child(81n)),
+#solution-grid .cell:nth-child(6n):not(:nth-child(9n)):not(:nth-child(18n)):not(:nth-child(27n)):not(:nth-child(36n)):not(:nth-child(45n)):not(:nth-child(54n)):not(:nth-child(63n)):not(:nth-child(72n)):not(:nth-child(81n)) {
+    border-right: 3px solid #2d3748 !important;
+}
+
+/* Game Over Screen - Modern Card Design */
+#game-over-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#game-over-screen .container {
+    width: 100%;
+    max-width: 500px;
+    padding: 30px;
+    background: var(--container-bg-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow-heavy);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+#game-over-message {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.game-over-grids {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.game-over-grid-section {
+    text-align: center;
+    width: 100%;
+}
+
+.game-over-grid-section h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 15px;
+}
+
+/* Game Over Grid Styling */
+#player-grid, #solution-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    gap: 1px;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    aspect-ratio: 1;
+    border: 2px solid var(--grid-border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--grid-border-color);
+}
+
+.game-over-grid-section .cell {
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #ffffff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+}
+
+.game-over-grid-section .cell.incorrect {
+    background-color: #fed7d7 !important;
+    color: var(--incorrect-text-color) !important;
+    font-weight: bold !important;
+}
+
+.game-over-grid-section .cell.given {
+    background-color: var(--given-cell-color) !important;
+    color: var(--given-text-color) !important;
+    font-weight: 700 !important;
+}
+
+/* Critical: Visual distinction for player vs given numbers in Your Result grid */
+#player-grid .cell {
+    position: relative;
+}
+
+/* Player-entered numbers (user input) - distinct styling */
+#player-grid .cell:not(.given):not(.incorrect) {
+    background: linear-gradient(135deg, #e6fffa, #b2f5ea) !important;
+    color: #00695c !important;
+    font-weight: 800 !important;
+    border: 1px solid #4fd1c7 !important;
+}
+
+#player-grid .cell:not(.given):not(.incorrect)::after {
+    content: '';
+    position: absolute;
+    bottom: 1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 2px;
+    background: #00d4aa;
+    border-radius: 1px;
+}
+
+/* Given numbers (initial puzzle) - standard styling */
+#player-grid .cell.given {
+    background: #f7fafc !important;
+    color: #4a5568 !important;
+    font-weight: 600 !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* Incorrect numbers - error styling */
+#player-grid .cell.incorrect {
+    background: linear-gradient(135deg, #fed7d7, #feb2b2) !important;
+    color: #c53030 !important;
+    font-weight: 800 !important;
+    border: 1px solid #f56565 !important;
+    animation: pulse-error 0.5s ease-in-out;
+}
+
+@keyframes pulse-error {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+#play-again-btn {
+    padding: 14px 28px;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #ffffff !important;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover)) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-medium);
+    position: relative;
+    overflow: hidden;
+    z-index: 10 !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    text-decoration: none !important;
+    line-height: 1.2 !important;
+    margin-top: 10px;
+}
+
+#play-again-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+#play-again-btn:hover {
+    background: linear-gradient(135deg, var(--primary-hover), var(--accent-color));
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-heavy);
+}
+
+#play-again-btn:hover::before {
+    left: 100%;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    #game-over-screen .container {
+        padding: 20px;
+        gap: 15px;
+        max-height: 95vh;
+    }
+    
+    #game-over-message {
+        font-size: 1.5rem;
+    }
+    
+    .game-over-grid-section h3 {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+    
+    #player-grid, #solution-grid {
+        max-width: 250px;
+    }
+    
+    .game-over-grid-section .cell {
+        font-size: 0.7rem;
+    }
+    
+    .game-over-grids {
+        gap: 15px;
+    }
+    
+    #play-again-btn {
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+    
+    #sudoku-grid {
+        width: 100%;
+    }
+    
+    #number-buttons {
+        max-width: 180px;
+        gap: 8px;
+        padding: 0 10px;
+    }
+    
+    .number-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1em;
+    }
+
+    #game-over-screen {
+        padding: 3px;
+        gap: 5px;
+        justify-content: flex-start;
+        padding-top: 3px;
+        overflow: hidden;
+    }
+
+    #game-over-message {
+        font-size: 1rem;
+        padding: 4px 8px;
+        margin: 0;
+        max-width: 98%;
+    }
+
+    .game-over-grids {
+        gap: 4px;
+        padding: 0;
+        max-width: 100%;
+    }
+
+    .game-over-grid-section {
+        max-width: 95%;
+        padding: 4px 2px;
+        margin: 0;
+    }
+    
+    .game-over-grid-section h3 {
+        font-size: 0.8rem;
+        margin-bottom: 2px;
+    }
+
+    #player-grid, #solution-grid {
+        max-width: 240px;
+    }
+
+    .game-over-grid-section .cell {
+        font-size: 0.6em;
+        min-height: 16px;
+    }
+
+    #play-again-btn {
+        padding: 6px 12px;
+        font-size: 0.8em;
+        min-width: 100px;
+        margin-top: 2px;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+    #game-over-screen {
+        padding: 2px;
+        padding-top: 3px;
+        gap: 4px;
+        overflow: hidden;
+    }
+
+    #game-over-message {
+        font-size: 0.9rem;
+        padding: 3px 6px;
+    }
+
+    .game-over-grids {
+        gap: 3px;
+        padding: 0;
+    }
+
+    .game-over-grid-section {
+        padding: 3px 2px;
+    }
+
+    .game-over-grid-section h3 {
+        font-size: 0.7rem;
+        margin-bottom: 1px;
+    }
+
+    #player-grid, #solution-grid {
+        max-width: 210px;
+    }
+
+    .game-over-grid-section .cell {
+        font-size: 0.55em;
+        min-height: 14px;
+    }
+
+    #play-again-btn {
+        padding: 4px 10px;
+        font-size: 0.75em;
+        min-width: 90px;
+        margin-top: 1px;
+    }
+}

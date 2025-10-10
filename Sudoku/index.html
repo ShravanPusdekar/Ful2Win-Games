@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Sudoku Game</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="welcome-screen" class="container">
+        <h1>Sudoku Game</h1>
+        <p>Choose your difficulty level:</p>
+        <div class="difficulty-options">
+            <button id="easy-btn" class="difficulty-btn">Easy</button>
+            <button id="medium-btn" class="difficulty-btn">Medium</button>
+            <button id="hard-btn" class="difficulty-btn">Hard</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="container hidden">
+        <div class="header">
+            <button id="back-btn" class="control-btn">Back</button>
+            <h2 id="lives-counter">Lives: ❤️❤️❤️</h2>
+        </div>
+        <div id="sudoku-grid"></div>
+        <div id="number-buttons">
+            <button class="number-btn">1</button>
+            <button class="number-btn">2</button>
+            <button class="number-btn">3</button>
+            <button class="number-btn">4</button>
+            <button class="number-btn">5</button>
+            <button class="number-btn">6</button>
+            <button class="number-btn">7</button>
+            <button class="number-btn">8</button>
+            <button class="number-btn">9</button>
+        </div>
+    </div>
+
+    <div id="game-over-screen" class="hidden">
+        <div class="container">
+            <h2 id="game-over-message"></h2>
+            <div class="game-over-grids">
+                <div class="game-over-grid-section">
+                    <h3>Your Result</h3>
+                    <div id="player-grid"></div>
+                </div>
+                <div class="game-over-grid-section">
+                    <h3>The Solution</h3>
+                    <div id="solution-grid"></div>
+                </div>
+            </div>
+            <button id="play-again-btn" class="control-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

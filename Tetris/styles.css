@@ -1,0 +1,439 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: hidden; /* Prevent scrolling */
+    position: relative;
+}
+
+.game-container {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-header {
+    text-align: center;
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* ULTIMATE FINAL HEADER POSITIONING - PERFECTLY ABOVE GAME BOARD */
+    width: auto;
+    max-width: calc(100vw - 280px);
+    /* ULTIMATE FINAL CLEAR SEPARATION - TITLE CLEANLY ABOVE BOARD */
+    margin-bottom: 45px;
+}
+
+.game-header h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+/* DEFINITIVE Corner positioning for Next Piece - Top Left */
+.next-piece-corner {
+    position: fixed !important;
+    top: 5px !important;
+    left: 5px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    text-align: center !important;
+    z-index: 9999 !important;
+    width: 120px !important;
+    /* DEFINITIVE NO OVERLAP - CLEAN POSITIONING */
+    max-width: calc(40vw - 10px) !important;
+    max-height: 140px !important;
+    /* DEFINITIVE enhanced border */
+    border: 2px solid rgba(0, 255, 136, 0.8) !important;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.4) !important;
+    /* DEFINITIVE ZERO INTERFERENCE */
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.next-piece-corner h3 {
+    color: #00ff88;
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+}
+
+/* DEFINITIVE Corner positioning for Scoreboard - Top Right */
+.scoreboard-corner {
+    position: fixed !important;
+    top: 5px !important;
+    right: 5px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    z-index: 9999 !important;
+    width: 140px !important;
+    /* DEFINITIVE NO OVERLAP - CLEAN POSITIONING */
+    max-width: calc(40vw - 10px) !important;
+    max-height: 140px !important;
+    /* DEFINITIVE enhanced border */
+    border: 2px solid rgba(0, 255, 136, 0.8) !important;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.4) !important;
+    /* DEFINITIVE ZERO INTERFERENCE */
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.game-board-container {
+    position: absolute !important;
+    top: 48% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    /* ULTIMATE FINAL FIX - POSITIONED ABOVE CONTROLS WITH PERFECT CLEARANCE */
+    width: min(304px, calc(100vw - 16px)) !important;
+    height: calc(100vh - 220px) !important;
+    /* ULTIMATE FINAL CONSTRAINTS - ABOVE CONTROLS WITH FULL CLEARANCE */
+    max-width: calc(100vw - 16px) !important;
+    min-width: 304px !important;
+    min-height: 360px !important;
+    max-height: calc(100vh - 220px) !important;
+    z-index: 10 !important;
+    /* ULTIMATE FINAL PRECISION - POSITIONED ABOVE CONTROLS */
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 0 30px 0 !important;
+    /* ULTIMATE FINAL GRID ALIGNMENT */
+    display: block !important;
+    /* ULTIMATE FINAL TRAVERSAL - NO OVERLAP WITH CONTROLS */
+    overflow: visible !important;
+    /* ULTIMATE FINAL ASPECT RATIO - PRECISE 10x20 GRID */
+    aspect-ratio: 10 / 20 !important;
+}
+
+#gameBoard {
+    border: 2px solid #00ff88 !important;
+    border-radius: 6px !important;
+    background: #000 !important;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3) !important;
+    width: 100% !important;
+    height: calc(100% - 30px) !important;
+    display: block !important;
+    /* ULTIMATE FINAL perfect rendering - NO CONTROL OVERLAP */
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    /* ULTIMATE FINAL ELIMINATION of overlap - CONTROL CLEARANCE */
+    outline: none !important;
+    /* ULTIMATE FINAL FIX - CANVAS POSITIONED ABOVE CONTROLS */
+    object-fit: fill !important;
+    image-rendering: pixelated !important;
+}
+
+/* Game over screen removed - using blur effect instead */
+.game-over-blur {
+    filter: blur(5px) !important;
+    transition: filter 0.5s ease !important;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#nextPiece {
+    border: 2px solid #333;
+    border-radius: 5px;
+    background: #000;
+    width: 90px;
+    height: 90px;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+.score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+    padding: 4px 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.score-item:last-child {
+    margin-bottom: 0;
+}
+
+.label {
+    font-weight: bold;
+    color: #ccc;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+}
+
+.value {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #00ff88;
+    text-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+}
+
+.desktop-controls {
+    display: none;
+}
+
+/* ULTIMATE FINAL Mobile Controls - POSITIONED BELOW GAME BOARD WITH PERFECT CLEARANCE */
+.mobile-controls {
+    position: fixed !important;
+    bottom: 5px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 100vw !important;
+    background: transparent !important;
+    padding: 6px !important;
+    backdrop-filter: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+    z-index: 9998 !important;
+    /* ULTIMATE FINAL height for 5 essential buttons - PERFECT CLEARANCE */
+    height: 105px !important;
+    /* Safe area for devices with notches */
+    padding-bottom: 6px !important;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    /* ULTIMATE FINAL centering - POSITIONED BELOW GAME BOARD */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+.control-row {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 15px !important;
+    margin-bottom: 6px !important;
+    /* ULTIMATE FINAL proper spacing */
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* ULTIMATE FINAL spacing for the second row with only 2 buttons */
+.control-row:last-child {
+    gap: 30px !important;
+    margin-bottom: 0 !important;
+    justify-content: center !important;
+}
+
+.control-btn {
+    width: 64px !important;
+    height: 64px !important;
+    border: none !important;
+    border-radius: 6px !important;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a) !important;
+    color: #00ff88 !important;
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    cursor: pointer;
+    transition: all 0.05s ease !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    border: 3px solid rgba(0, 255, 136, 0.8) !important;
+    /* ULTIMATE FINAL button positioning */
+    position: relative !important;
+    z-index: 9997 !important;
+    /* ULTIMATE FINAL touch target */
+    min-width: 64px !important;
+    min-height: 64px !important;
+    /* ULTIMATE FINAL enhanced visibility on transparent background */
+    text-shadow: 0 0 24px rgba(0, 255, 136, 1.0) !important;
+    /* ULTIMATE FINAL enhanced glow effect for perfect visibility */
+    box-shadow: 0 0 35px rgba(0, 255, 136, 0.8), inset 0 0 15px rgba(0, 255, 136, 0.3) !important;
+    /* ULTIMATE FINAL button integrity */
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    /* ULTIMATE FINAL backdrop for perfect visibility */
+    backdrop-filter: blur(8px) !important;
+}
+
+.control-btn:active {
+    transform: translateY(1px) scale(0.92);
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    color: #00ff44;
+    border-color: #00ff44;
+    /* ULTIMATE FINAL enhanced active state for perfect feedback */
+    box-shadow: 0 0 25px rgba(0, 255, 68, 0.8), inset 0 0 10px rgba(0, 255, 68, 0.2);
+    text-shadow: 0 0 15px rgba(0, 255, 68, 1.0);
+}
+
+.control-btn:hover {
+    background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.9), inset 0 0 20px rgba(0, 255, 136, 0.4);
+    transform: scale(1.02);
+    border-color: rgba(0, 255, 136, 0.9);
+}
+
+/* Desktop-only responsive adjustments */
+@media (min-width: 769px) {
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        padding: 20px;
+    }
+    
+    .game-container {
+        max-width: 1200px;
+        height: 800px;
+        padding: 0;
+        margin: 0 auto;
+    }
+    
+    .game-header {
+        top: 35px;
+        height: 30px;
+    }
+    
+    .game-header h1 {
+        font-size: 2.5rem;
+        letter-spacing: 3px;
+    }
+    
+    .next-piece-corner {
+        top: 70px;
+        left: 15px;
+        width: 150px;
+        padding: 15px;
+        max-width: none;
+    }
+    
+    .next-piece-corner h3 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    .scoreboard-corner {
+        top: 70px;
+        right: 15px;
+        width: 170px;
+        padding: 15px;
+        max-width: none;
+    }
+    
+    .game-board-container {
+        /* ULTIMATE FINAL Enhanced desktop width - PERFECT CENTERING */
+        width: 400px !important;
+        height: 580px !important;
+        margin-top: 0;
+        max-height: none;
+        /* ULTIMATE FINAL Ensure perfect centering on desktop */
+        box-sizing: border-box;
+        /* ULTIMATE FINAL Desktop optimization for perfect alignment */
+        min-width: 400px !important;
+        /* ULTIMATE FINAL positioning adjustment - PERFECT CENTER */
+        top: 50% !important;
+        padding: 0 0 35px 0 !important;
+    }
+    
+    #nextPiece {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .score-item {
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        font-size: 1rem;
+    }
+    
+    .label {
+        font-size: 0.9rem;
+    }
+    
+    .value {
+        font-size: 1.2rem;
+    }
+    
+    .desktop-controls {
+        display: block;
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        width: 200px;
+    }
+    
+    .desktop-controls h3 {
+        color: #00ff88;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+        letter-spacing: 1px;
+        text-align: center;
+        margin-top: 0;
+    }
+    
+    .control-item {
+        margin-bottom: 8px;
+        padding: 5px 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 3px;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+    
+    .control-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .mobile-controls {
+        display: none;
+    }
+}
+
+/* Animation for line clearing */
+@keyframes lineClear {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; background-color: #fff; }
+    100% { opacity: 0; }
+}
+
+.line-clear {
+    animation: lineClear 0.3s ease-in-out;
+}
