@@ -17,7 +17,7 @@ function CInterface(iGoal){
             var oSprite = s_oSpriteLibrary.getSprite('audio_icon');
             _pStartPosAudio = {x: CANVAS_WIDTH - (oSprite.width/2) - 10, y: (oSprite.height/2) + 10};
             _oAudioToggle = new CToggle(_pStartPosAudio.x,_pStartPosAudio.y,oSprite,s_bAudioActive);
-            _oAudioToggle.addEventListener(ON_MOUSE_UP, this._onAudioToggle, this);    
+            _oAudioToggle.addEventListener(ON_MOUSE_UP, this._onAudioToggle, this);
         }
         
         _oScoreTextStroke = new createjs.Text("SCORE: 0"," 40px "+FONT, "#410701");
@@ -36,6 +36,13 @@ function CInterface(iGoal){
         _oScoreText.lineWidth = 400;     
         s_oStage.addChild(_oScoreText);
         
+        // Ensure audio button is visible and properly positioned
+        if(DISABLE_SOUND_MOBILE === false || s_bMobile === false){
+            if(_oAudioToggle !== null){
+                _oAudioToggle.setVisible(true);
+            }
+        }
+        
         this.refreshButtonPos(s_iOffsetX,s_iOffsetY);
     };
     
@@ -46,19 +53,36 @@ function CInterface(iGoal){
     
     this.unload = function(){
         if(DISABLE_SOUND_MOBILE === false || s_bMobile === false){
-            _oAudioToggle.unload();
-            _oAudioToggle = null;
+            if(_oAudioToggle !== null){
+                _oAudioToggle.unload();
+                _oAudioToggle = null;
+            }
         }
         
         if(_oHelpPanel!==null){
             _oHelpPanel.unload();
         }
+        
+        // Remove score text elements from stage
+        s_oStage.removeChild(_oScoreTextStroke);
+        s_oStage.removeChild(_oScoreText);
+        
         s_oInterface = null;
     };
     
     this.refreshButtonPos = function(iNewX,iNewY){
         if(DISABLE_SOUND_MOBILE === false || s_bMobile === false){
-            _oAudioToggle.setPosition(_pStartPosAudio.x - iNewX,iNewY + _pStartPosAudio.y);
+            if(_oAudioToggle !== null){
+                // Ensure the audio button stays in the top-right corner during gameplay
+                var newX = _pStartPosAudio.x - iNewX;
+                var newY = iNewY + _pStartPosAudio.y;
+                
+                // Make sure the button doesn't go off-screen
+                newX = Math.max(50, Math.min(newX, CANVAS_WIDTH - 50));
+                newY = Math.max(50, newY);
+                
+                _oAudioToggle.setPosition(newX, newY);
+            }
         }        
         _oScoreTextStroke.y = _oScorePos.y+iNewY;
         _oScoreText.y = _oScorePos.y+iNewY;

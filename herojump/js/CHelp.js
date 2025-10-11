@@ -21,6 +21,13 @@ function CHelp(){
     var _oArrowRight;
     var _oButPlay;
     
+    // Timer variables
+    var _oTimerText;
+    var _oTimerTextOutline;
+    var _iCountdown = 10;
+    var _bTimerActive = true;
+    var _iCurrentPage = 1;
+    
     
     this._init = function(){
         _oBg = createBitmap(s_oSpriteLibrary.getSprite('bg_scroll_1'));
@@ -35,6 +42,21 @@ function CHelp(){
         _oBg = createBitmap(s_oSpriteLibrary.getSprite('msg_box'));
         
         s_oStage.addChild(_oBg);
+        
+        // Create countdown timer display
+        _oTimerTextOutline = new createjs.Text(_iCountdown.toString(), "40px " + FONT, "#410701");
+        _oTimerTextOutline.x = 51;
+        _oTimerTextOutline.y = 51;
+        _oTimerTextOutline.textAlign = "left";
+        _oTimerTextOutline.textBaseline = "alphabetic";
+        s_oStage.addChild(_oTimerTextOutline);
+        
+        _oTimerText = new createjs.Text(_iCountdown.toString(), "40px " + FONT, "#ffb400");
+        _oTimerText.x = 50;
+        _oTimerText.y = 50;
+        _oTimerText.textAlign = "left";
+        _oTimerText.textBaseline = "alphabetic";
+        s_oStage.addChild(_oTimerText);
                 
         _oMsgTextOutline = new createjs.Text(""," 25px "+FONT, "#410701");
         _oMsgTextOutline.x = CANVAS_WIDTH/2+1;
@@ -67,10 +89,10 @@ function CHelp(){
             _oHelpSpriteCursor.y = CANVAS_HEIGHT/2-60;
             this.moveCursorRightDesktop(_oHelpSpriteCursor);
             _oGroup1.addChild(_oHelpSpriteCursor);
-        }else if(s_bCanOrientate){
-            //I'M ON A DEVICE WITH GIROSCOPE
-            _oMsgTextOutline.text = TEXT_ORIENTATION;
-            _oMsgText.text = TEXT_ORIENTATION;
+        }else{
+            //I'M ON A MOBILE DEVICE - ALWAYS USE TILT CONTROLS
+            _oMsgTextOutline.text = TEXT_MOBILE;
+            _oMsgText.text = TEXT_MOBILE;
             
             var oSprite = s_oSpriteLibrary.getSprite('smartphone_rotation');
             var oData = {   
@@ -86,20 +108,6 @@ function CHelp(){
             _oHelpSprite.x = CANVAS_WIDTH/2-80;
             _oHelpSprite.y = CANVAS_HEIGHT/2-130;
             _oGroup1.addChild(_oHelpSprite);
-        }else{
-            //I'M ON A DEVICE WITHOUT GIROSCOPE
-            _oMsgTextOutline.text = TEXT_MOBILE;
-            _oMsgText.text = TEXT_MOBILE;
-            _oHelpSprite = createBitmap(s_oSpriteLibrary.getSprite('help_smartphone'));
-            _oHelpSprite.x = CANVAS_WIDTH/2-50;
-            _oHelpSprite.y = CANVAS_HEIGHT/2-130;
-            _oGroup1.addChild(_oHelpSprite);
-            
-            _oHelpSpriteCursor = createBitmap(s_oSpriteLibrary.getSprite('help_touch'));
-            _oHelpSpriteCursor.x = CANVAS_WIDTH/2-30;
-            _oHelpSpriteCursor.y = CANVAS_HEIGHT/2-60;
-            this.moveCursorRight(_oHelpSpriteCursor);
-            _oGroup1.addChild(_oHelpSpriteCursor);
         }
         
         s_oStage.addChild(_oGroup1);
@@ -419,9 +427,25 @@ function CHelp(){
     }
     
     this._initListener = function(){
-        _oArrowLeft.addEventListener("click",this._previousPage);
-        _oArrowRight.addEventListener("click",this._nextPage);
-        _oButPlay.addEventListener("click",this._onExit);
+        _oArrowLeft.addEventListener("click",this._previousPageManual);
+        _oArrowRight.addEventListener("click",this._nextPageManual);
+        _oButPlay.addEventListener("click",this._onExitManual);
+    };
+    
+    this._previousPageManual = function(){
+        _bTimerActive = false; // Stop auto timer when user interacts
+        _oParent._previousPage();
+    };
+    
+    this._nextPageManual = function(){
+        _bTimerActive = false; // Stop auto timer when user interacts
+        _iCurrentPage = 2;
+        _oParent._nextPage();
+    };
+    
+    this._onExitManual = function(){
+        _bTimerActive = false; // Stop auto timer when user interacts
+        _oParent._onExit();
     };
     
     this._previousPage = function(){
@@ -442,7 +466,46 @@ function CHelp(){
     
     this.show = function(){
         
-        createjs.Tween.get(_oGroup1).to({alpha:1 }, 500).call(function() {_oParent._initListener();});
+        createjs.Tween.get(_oGroup1).to({alpha:1 }, 500).call(function() {
+            _oParent._initListener();
+            _oParent._startTimer();
+        });
+    };
+    
+    this._startTimer = function(){
+        if(_bTimerActive){
+            setTimeout(function(){
+                _oParent._updateTimer();
+            }, 1000);
+        }
+    };
+    
+    this._updateTimer = function(){
+        if(!_bTimerActive) return;
+        
+        _iCountdown--;
+        _oTimerText.text = _iCountdown.toString();
+        _oTimerTextOutline.text = _iCountdown.toString();
+        
+        // Change color when timer gets low
+        if(_iCountdown <= 3){
+            _oTimerText.color = "#ff4444";
+            _oTimerTextOutline.color = "#660000";
+        }
+        
+        if(_iCountdown === 5 && _iCurrentPage === 1){
+            // Switch to page 2 at 5 seconds
+            _iCurrentPage = 2;
+            this._nextPage();
+        } else if(_iCountdown === 0){
+            // Start game at 0 seconds
+            _bTimerActive = false;
+            this._onExit();
+            return;
+        }
+        
+        // Continue timer
+        this._startTimer();
     };
     
     this._onExit = function(){
@@ -452,6 +515,8 @@ function CHelp(){
     };
     
     this.unload = function(){
+        _bTimerActive = false; // Stop the timer
+        
         _oArrowLeft.removeAllEventListeners ("click");
         _oArrowRight.removeAllEventListeners ("click");
         

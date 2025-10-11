@@ -60,8 +60,8 @@
                                             player_spd_max: 15,                      //maximum speed that the player can reach
                                             player_spd_min: 0.2,                     //minimum speed that the player can reach
                                             player_acceleration_no_giroscope: 1.2,   //the accelleration to moltiply to the velocity to the player when there is no giroscope on device
-                                            player_acceleration_giroscope: 1.1,      //the accelleration to moltiply to the velocity to the player when there is the giroscope on device
-                                            player_deceleration: 0.9,                //deceleration to add to the player in way to reache the player_spd_min
+                                            player_acceleration_giroscope: 1.8,      //the accelleration to moltiply to the velocity to the player when there is the giroscope on device
+                                            player_deceleration: 0.85,               //deceleration to add to the player in way to reache the player_spd_min
                                             object_spd: 5,                           //speed of the object (when they are going to move vertically)
                                             object_spd_orizzontal: 4,                //speed of the object (when they are going to move orizontally)
                                             acceleration: 4,                         //acceleration of the various objects ( platforms, coins, ... )
@@ -69,7 +69,7 @@
                                             deceleration_bg_game_over: 0.5,          //deceleration of the game background when there is a game over
                                             object_spd_max: 17,                      //maximum speed that the varios object can reach
                                             object_spd_min: -17,                     //minimum speed that the varios object can reach
-                                            gamma_range_accepted: 4,                 //maxinum gamma read from the game, the more it is, the more the game is difficult (if there is a giroscope)
+                                            gamma_range_accepted: 6,                 //maxinum gamma read from the game, the more it is, the more the game is difficult (if there is a giroscope)
                                             canvas_half_width_range_accepted: 215,   //cursor range accepted (calculated by the half measure of the canvas width +- this value), if there is no giroscope
                                             num_platform_created_for_spring: 20,     //number of platform to create before the game decide if it have or not to spawn a spring
                                             height_between_object: [50, 60, 70, 80], //distance from a platform to another
@@ -152,6 +152,44 @@
                     // Additional load event handler
                     window.addEventListener('load', function() {
                         setTimeout(sizeHandler, 100);
+                    });
+                    
+                    // Handle visibility change (phone lock/unlock, app switch)
+                    document.addEventListener('visibilitychange', function() {
+                        if (document.hidden) {
+                            // Page is hidden (phone locked or app switched)
+                            console.log("App hidden - pausing sound");
+                            if(s_oMain) {
+                                s_oMain.stopUpdate();
+                            }
+                            if(s_oSoundtrack) {
+                                s_oSoundtrack.paused = true;
+                            }
+                        } else {
+                            // Page is visible again
+                            console.log("App visible - resuming");
+                            if(s_oMain) {
+                                s_oMain.startUpdate();
+                            }
+                            if(s_oSoundtrack && s_bAudioActive) {
+                                s_oSoundtrack.paused = false;
+                            }
+                        }
+                    });
+                    
+                    // Handle page focus/blur events as backup
+                    window.addEventListener('blur', function() {
+                        console.log("Window blur - pausing");
+                        if(s_oSoundtrack) {
+                            s_oSoundtrack.paused = true;
+                        }
+                    });
+                    
+                    window.addEventListener('focus', function() {
+                        console.log("Window focus - resuming");
+                        if(s_oSoundtrack && s_bAudioActive) {
+                            s_oSoundtrack.paused = false;
+                        }
                     });
            });
 

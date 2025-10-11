@@ -182,8 +182,9 @@ function CMain(oData){
     };
     
     this.gotoMenu = function(){
-        _oMenu = new CMenu();
-        _iState = STATE_MENU;
+        // Skip title screen and go directly to instructions
+        $(s_oMain).trigger("start_session");
+        this.gotoHelp();
     };    
 
     this.gotoGame = function(iLevel){        

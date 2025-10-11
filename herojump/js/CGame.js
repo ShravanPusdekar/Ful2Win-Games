@@ -16,6 +16,12 @@ function CGame(oData){
     var _iForceDirection = 0;
     var _iPlayerAcceleration = 0;
     
+    // Smooth tilt control variables
+    var _iRawTiltValue = 0;
+    var _iSmoothedTiltValue = 0;
+    var _iTiltDeadZone = 0.2; // Minimum tilt angle to register movement
+    var _fSmoothingFactor = 0.4; // How much smoothing to apply (higher = more responsive)
+    
     var _oPlayer;
     var _oBonus = null;
     var _aCoin = new Array();
@@ -94,33 +100,18 @@ function CGame(oData){
         
         _oInterface = new CInterface();
        
+        // Skip the "click to start" screen and auto-start the game
         _oWaitClickContainer = new createjs.Container();
-        s_oStage.addChild(_oWaitClickContainer);
-        
-        var oSprite = createBitmap(s_oSpriteLibrary.getSprite('help_touch'));
-        oSprite.x = CANVAS_WIDTH/2-30;
-        oSprite.y = CANVAS_HEIGHT/2-70;
-        
-        var oMsgTextStroke = new createjs.Text(TEXT_START_GAME," 40px "+FONT, "#410701");
-        oMsgTextStroke.x = (CANVAS_WIDTH/2)+2;
-        oMsgTextStroke.y = (CANVAS_HEIGHT/2)-140;
-        oMsgTextStroke.textAlign = "center";
-        oMsgTextStroke.textBaseline = "alphabetic";
-        oMsgTextStroke.lineWidth = 500; 
-        
-        var oMsgText = new createjs.Text(TEXT_START_GAME," 40px "+FONT, "#ffb400");
-        oMsgText.x = CANVAS_WIDTH/2;
-        oMsgText.y = (CANVAS_HEIGHT/2)-142;
-        oMsgText.textAlign = "center";
-        oMsgText.textBaseline = "alphabetic";
-        oMsgText.lineWidth = 500;  
-        
-        _oWaitClickContainer.addChild(oSprite, oMsgTextStroke, oMsgText);
+        // Don't add the wait container to stage - skip it entirely
         
         this.startSpeedIncrement();
-        
-        _oGameContainer.on("mousedown", this.setUpdateTrue);
         this._initMouseMove();
+        
+        // Auto-start the game after a brief delay
+        var oParent = this;
+        setTimeout(function(){
+            oParent.setUpdateTrue();
+        }, 500);
     };
     
     this._controlIfAllReady = function(){
@@ -284,6 +275,15 @@ function CGame(oData){
     
     //DETECTIONG MOUSE MOVE
     this._initMouseMove = function(){
+        // Force check for device orientation capability
+        if(s_bMobile && (window.DeviceOrientationEvent || window.DeviceMotionEvent)) {
+            s_bCanOrientate = true;
+            console.log("Mobile device detected - forcing tilt controls");
+        } else {
+            s_bCanOrientate = false;
+            console.log("Desktop or no orientation - using mouse controls");
+        }
+        
         if(!s_bCanOrientate){
             s_oStage.on("stagemousemove", function(evt) {
                 _iForceDirection = (evt.stageX-(CANVAS_HALF_WIDTH)) / (CANVAS_HALF_WIDTH-CANVAS_WIDTH_RANGE_ACCEPTED);
@@ -297,14 +297,31 @@ function CGame(oData){
             });
         }else{
             window.addEventListener('deviceorientation', function(eventData) {
-                if(eventData.gamma < GAMMA_RANGE_ACCEPTED && eventData.gamma > -GAMMA_RANGE_ACCEPTED){
-                    _iForceDirection = eventData.gamma / GAMMA_RANGE_ACCEPTED;
-                }else{
-                    if(eventData.gamma < 0){
-                        _iForceDirection = -1;
-                    }else{
-                        _iForceDirection = 1;
+                if(eventData.gamma !== null && eventData.gamma !== undefined) {
+                    // Store raw tilt value
+                    _iRawTiltValue = eventData.gamma;
+                    
+                    // Apply dead zone - ignore small movements
+                    var processedTilt = _iRawTiltValue;
+                    if(Math.abs(processedTilt) < _iTiltDeadZone) {
+                        processedTilt = 0;
                     }
+                    
+                    // Apply exponential smoothing to reduce jitter
+                    _iSmoothedTiltValue = _iSmoothedTiltValue + _fSmoothingFactor * (processedTilt - _iSmoothedTiltValue);
+                    
+                    // Calculate force direction with improved range handling
+                    if(Math.abs(_iSmoothedTiltValue) < GAMMA_RANGE_ACCEPTED){
+                        _iForceDirection = _iSmoothedTiltValue / GAMMA_RANGE_ACCEPTED;
+                    }else{
+                        // Clamp to maximum values but maintain smooth transition
+                        if(_iSmoothedTiltValue < 0){
+                            _iForceDirection = -1;
+                        }else{
+                            _iForceDirection = 1;
+                        }
+                    }
+                    
                     _iPlayerAcceleration = PLAYER_ACCELERATION_GIROSCOPE;
                 }
             }, false);
@@ -316,7 +333,11 @@ function CGame(oData){
         if(_bUpdate || _bIsGameOver){
             return;
         }
-        createjs.Tween.get(_oWaitClickContainer).to({alpha:0 }, 500).call(function() {s_oStage.removeChild(_oWaitClickContainer);});
+        
+        // Only remove wait container if it was added to stage
+        if(_oWaitClickContainer && _oWaitClickContainer.parent) {
+            createjs.Tween.get(_oWaitClickContainer).to({alpha:0 }, 500).call(function() {s_oStage.removeChild(_oWaitClickContainer);});
+        }
         
         _oGameContainer.off("mousedown", this.setUpdateTrue);
         _bPlayerAnimation = true;

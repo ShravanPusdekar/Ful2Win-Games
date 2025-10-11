@@ -79,28 +79,22 @@ function CEndPanel(oSpriteBg){
         _oGroup.alpha = 0;
         _oGroup.visible=false;
         
-        _oGroup.addChild(_oBg, _oPlayerStunned, _oScoreTextStroke, _oScoreText, _oMsgTextStroke, _oMsgText, _oButRestart, _oButHome);
+        _oGroup.addChild(_oBg, _oPlayerStunned, _oScoreTextStroke, _oScoreText, _oMsgTextStroke, _oMsgText);
 
         s_oStage.addChild(_oGroup);
     };
     
     this.unload = function(){
-        _oButHome.off("mousedown",this._onExit);
-        _oButRestart.off("mousedown",this._onRestart);
+        // Buttons removed - no listeners to remove
     };
     
     this._initListener = function(){
-        _oButHome.on("mousedown",this._onExit);
-        _oButRestart.on("mousedown",this._onRestart);
+        // Buttons removed - no listeners needed
     };
     
     this.show = function(iScore){
         console.log(iScore);
-        const origin = window.location.hostname.includes("localhost")
-  ? "http://localhost:5173"
-  : "https://fulboost.fun";
-
-window.parent.postMessage({ type: "GAME_OVER", score: iScore }, "*");
+        
         setVolume(s_oSoundtrack, 0)
 	_oGameOverSound = playSound("game_over",1,0);
         _oMsgTextStroke.text = TEXT_GAMEOVER;
@@ -111,7 +105,19 @@ window.parent.postMessage({ type: "GAME_OVER", score: iScore }, "*");
         
         _oGroup.visible = true;
         
-        createjs.Tween.get(_oGroup).to({alpha:1 }, 500).call(function() {_oParent._initListener();});
+        createjs.Tween.get(_oGroup).to({alpha:1 }, 500);
+        
+        // After 2 seconds, apply blur effect and send postMessage
+        setTimeout(function() {
+            // Apply blur effect to the entire stage/game
+            if (s_oStage) {
+                s_oStage.filters = [new createjs.BlurFilter(8, 8)];
+                s_oStage.cache(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            }
+            
+            // Send postMessage with game score
+            window.parent.postMessage({ type: "GAME_OVER", score: iScore }, "*");
+        }, 2000);
         
         $(s_oMain).trigger("share_event",[iScore]);
         $(s_oMain).trigger("save_score",[iScore]);
