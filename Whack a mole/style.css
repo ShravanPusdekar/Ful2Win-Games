@@ -1,0 +1,662 @@
+@import url("https://fonts.googleapis.com/css?family=Nunito");
+
+*,
+*:before,
+*:after {
+  -webkit-box-sizing: inherit;
+  -moz-box-sizing: inherit;
+  box-sizing: inherit;
+}
+
+html {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  font-size: 10px;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: "Nunito", sans-serif;
+  /* Authentic carnival/fair background */
+  background: linear-gradient(180deg, 
+    #87CEEB 0%,     /* Sky blue */
+    #98D8E8 20%,    /* Light blue */
+    #FFB347 40%,    /* Peach for carnival tents */
+    #FF6B47 60%,    /* Orange carnival colors */
+    #8B4513 80%,    /* Brown ground */
+    #654321 100%    /* Dark brown dirt */
+  );
+  /* Add carnival atmosphere with subtle patterns */
+  background-image: 
+    /* Carnival tent stripes */
+    repeating-linear-gradient(45deg, 
+      transparent, 
+      transparent 20px, 
+      rgba(255, 255, 255, 0.1) 20px, 
+      rgba(255, 255, 255, 0.1) 25px),
+    /* Ground texture */
+    radial-gradient(circle at 30% 85%, rgba(139, 69, 19, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 70% 90%, rgba(101, 67, 33, 0.2) 0%, transparent 40%);
+  min-height: 100vh;
+  text-align: center;
+  /* NUCLEAR OPTION - Maximum mobile webview optimization */
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  -ms-touch-action: none !important;
+  -webkit-touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -ms-user-select: none !important;
+  -moz-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: 4.5rem;
+  line-height: 1;
+  margin: 2rem 0 0 0;
+  color: #FFD700;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2rem;
+  text-shadow: 
+    3px 3px 0px #FF4500,
+    6px 6px 0px #8B0000,
+    9px 9px 15px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(45deg, #FFD700, #FFA500, #FF4500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Game Info Container */
+.game-info {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin: 1rem 0;
+}
+
+h2 {
+  font-size: 2.5rem;
+  color: #FFD700;
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: 
+    2px 2px 0px #8B0000,
+    4px 4px 8px rgba(0, 0, 0, 0.6);
+  background: rgba(139, 0, 0, 0.2);
+  padding: 0.5rem 1.5rem;
+  border-radius: 10px;
+  border: 3px solid #8B0000;
+  display: inline-block;
+}
+
+.score {
+  background: #ffe5cf;
+  padding: 0 3rem;
+  line-height: 1;
+  -webkit-border-radius: 1rem;
+  -moz-border-radius: 1rem;
+  border-radius: 1rem;
+  color: #3b1010;
+}
+
+.game {
+  width: 90vw;
+  max-width: 600px;
+  height: 60vh;
+  min-height: 300px;
+  max-height: 400px;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 auto;
+  position: relative;
+  /* Wooden arcade machine border */
+  background: linear-gradient(145deg, 
+    #D2691E 0%,     /* Chocolate brown */
+    #8B4513 20%,    /* Saddle brown */
+    #A0522D 40%,    /* Sienna */
+    #8B4513 60%,    /* Saddle brown */
+    #654321 80%,    /* Dark brown */
+    #4A4A4A 100%    /* Dark gray */
+  );
+  border-radius: 20px;
+  border: 8px solid #654321;
+  box-shadow: 
+    inset 0 0 20px rgba(0, 0, 0, 0.3),
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 0 4px #8B4513;
+  /* Soil interior background to hide holes */
+  background-image: 
+    /* Soil texture overlay */
+    radial-gradient(circle at 20% 30%, rgba(101, 67, 33, 0.4) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(139, 69, 19, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(160, 82, 45, 0.2) 0%, transparent 60%),
+    /* Main soil color */
+    linear-gradient(180deg, 
+      rgba(139, 69, 19, 0.8) 0%,
+      rgba(101, 67, 33, 0.9) 50%,
+      rgba(83, 53, 21, 0.95) 100%
+    );
+  /* Touch optimization for game area */
+  touch-action: none !important;
+  -webkit-touch-action: none !important;
+  -ms-touch-action: none !important;
+  -webkit-touch-callout: none !important;
+  pointer-events: auto !important;
+}
+
+.hole {
+  flex: 1 0 33.33%;
+  overflow: hidden;
+  position: relative;
+}
+
+.hole:after {
+  display: block;
+  background: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1159990/dirt.svg")
+    bottom center no-repeat;
+  background-size: contain;
+  content: "";
+  width: 100%;
+  height: 70px;
+  position: absolute;
+  z-index: 2;
+  bottom: -30px;
+}
+
+.mole {
+  background: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1159990/mole.svg")
+    bottom center no-repeat;
+  background-size: 45%;
+  position: absolute;
+  top: 100%;
+  width: 100%;
+  height: 100%;
+  transition: all 0.4s;
+}
+
+.hole.up .mole {
+  top: 0;
+}
+
+/* Game Over Overlay */
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-over-overlay.hidden {
+  display: none;
+}
+
+.game-over-content {
+  text-align: center;
+  background: rgba(139, 0, 0, 0.9);
+  padding: 3rem;
+  border-radius: 20px;
+  border: 5px solid #FFD700;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.game-over-content h1 {
+  font-size: 4rem;
+  color: #FFD700;
+  margin: 0 0 1rem 0;
+  text-shadow: 
+    3px 3px 0px #8B0000,
+    6px 6px 15px rgba(0, 0, 0, 0.8);
+  animation: pulse 2s infinite;
+}
+
+.game-over-content h2 {
+  font-size: 2.5rem;
+  color: #FFD700;
+  margin: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.hidden {
+  display: none;
+}
+
+/* Toy Hammer Styles */
+.hammer {
+  position: absolute;
+  width: 50px;
+  height: 75px;
+  z-index: 10;
+  pointer-events: auto; /* Allow interaction with hammer */
+  transform: translate(-50%, -50%) rotate(-20deg);
+  transition: transform 0.15s ease-out;
+  display: none;
+  filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.7));
+  cursor: grab;
+  opacity: 1; /* Ensure full opacity */
+}
+
+.hammer:active {
+  cursor: grabbing;
+}
+
+/* Hammer Head (3D Cylindrical Red) */
+.hammer-head {
+  width: 45px;
+  height: 30px;
+  background: linear-gradient(135deg, #FF3333 0%, #DD0000 50%, #AA0000 100%);
+  border-radius: 15px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 1;
+  box-shadow: 
+    inset 3px 3px 6px rgba(255, 120, 120, 0.5),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.4),
+    0 3px 10px rgba(0, 0, 0, 0.5);
+  /* 3D cylindrical effect */
+  background-image: 
+    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.4) 0%, transparent 50%),
+    linear-gradient(90deg, 
+      rgba(0, 0, 0, 0.15) 0%, 
+      transparent 20%, 
+      transparent 80%, 
+      rgba(0, 0, 0, 0.25) 100%
+    );
+}
+
+/* Add hammer head end caps for 3D effect */
+.hammer-head::before,
+.hammer-head::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 30px;
+  background: linear-gradient(180deg, #FF5555, #DD0000, #990000);
+  border-radius: 4px;
+  top: 0;
+  opacity: 1;
+  box-shadow: 
+    inset 1px 1px 3px rgba(255, 255, 255, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.hammer-head::before {
+  left: -4px;
+  transform: skewY(-10deg);
+}
+
+.hammer-head::after {
+  right: -4px;
+  transform: skewY(10deg);
+}
+
+/* Hammer Handle (3D Yellow) */
+.hammer-handle {
+  width: 8px;
+  height: 55px;
+  background: linear-gradient(135deg, #FFDD44 0%, #FFD700 30%, #FF9500 70%, #FF7700 100%);
+  border-radius: 4px;
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 1;
+  box-shadow: 
+    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.3),
+    2px 2px 8px rgba(0, 0, 0, 0.4);
+  /* 3D cylindrical handle effect */
+  background-image: 
+    radial-gradient(ellipse at 25% 25%, rgba(255, 255, 255, 0.5) 0%, transparent 60%),
+    linear-gradient(90deg, 
+      rgba(0, 0, 0, 0.15) 0%, 
+      transparent 30%, 
+      transparent 70%, 
+      rgba(0, 0, 0, 0.2) 100%
+    );
+}
+
+/* Handle grip texture */
+.hammer-handle::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.1) 3px,
+    rgba(0, 0, 0, 0.1) 4px
+  );
+  border-radius: 4px;
+}
+
+/* Hammer Connector (where handle meets head) */
+.hammer-connector {
+  width: 12px;
+  height: 8px;
+  background: linear-gradient(135deg, #FFD700, #FF9500, #FF7700);
+  border-radius: 6px;
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 1;
+  box-shadow: 
+    inset 2px 2px 3px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 3px rgba(0, 0, 0, 0.4),
+    0 2px 5px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.hammer.active {
+  display: block;
+}
+
+.hammer.preparing {
+  animation: hammerPrepare 0.3s ease-out;
+}
+
+.hammer.hit {
+  animation: hammerSwing 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hammer.miss {
+  animation: hammerMiss 0.3s ease-out;
+}
+
+/* Realistic hammer swing animation */
+@keyframes hammerSwing {
+  0% { 
+    transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+  }
+  30% { 
+    transform: translate(-50%, -60%) rotate(-60deg) scale(1.1);
+    filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.4));
+  }
+  60% { 
+    transform: translate(-50%, -40%) rotate(15deg) scale(1.2);
+    filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.5));
+  }
+  80% { 
+    transform: translate(-50%, -45%) rotate(5deg) scale(1.1);
+    filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.4));
+  }
+  100% { 
+    transform: translate(-50%, -50%) rotate(-20deg) scale(1);
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+  }
+}
+
+/* Preparation animation when hovering over mole */
+@keyframes hammerPrepare {
+  0% { 
+    transform: translate(-50%, -50%) rotate(-20deg) scale(1);
+  }
+  50% { 
+    transform: translate(-50%, -55%) rotate(-35deg) scale(1.05);
+  }
+  100% { 
+    transform: translate(-50%, -50%) rotate(-30deg) scale(1);
+  }
+}
+
+/* Miss animation */
+@keyframes hammerMiss {
+  0% { 
+    transform: translate(-50%, -50%) rotate(-30deg) scale(1);
+  }
+  50% { 
+    transform: translate(-50%, -45%) rotate(10deg) scale(1.1);
+  }
+  100% { 
+    transform: translate(-50%, -50%) rotate(-20deg) scale(1);
+  }
+}
+
+/* Mole hit effect */
+.mole.hit {
+  animation: moleHit 0.6s ease-out;
+}
+
+@keyframes moleHit {
+  0% { 
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) hue-rotate(0deg);
+    opacity: 1;
+  }
+  15% { 
+    transform: scale(1.3) rotate(-10deg);
+    filter: brightness(2) hue-rotate(60deg);
+    opacity: 1;
+  }
+  30% { 
+    transform: scale(0.7) rotate(8deg);
+    filter: brightness(0.5) hue-rotate(120deg);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.2) rotate(-5deg);
+    filter: brightness(1.5) hue-rotate(180deg);
+    opacity: 0.9;
+  }
+  70% { 
+    transform: scale(0.8) rotate(3deg);
+    filter: brightness(0.7) hue-rotate(240deg);
+    opacity: 0.7;
+  }
+  85% { 
+    transform: scale(1.1) rotate(-2deg);
+    filter: brightness(1.2) hue-rotate(300deg);
+    opacity: 0.5;
+  }
+  100% { 
+    transform: scale(0) rotate(0deg);
+    filter: brightness(0) hue-rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Hit explosion effect */
+.hole.hit::before {
+  content: "💥";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  z-index: 5;
+  animation: explosion 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes explosion {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1.5) rotate(90deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(2) rotate(180deg);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(270deg);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Score popup effect */
+.score-popup {
+  position: absolute;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #00ff00;
+  text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+  z-index: 15;
+  pointer-events: none;
+  animation: scorePopup 1s ease-out forwards;
+}
+
+/* Screen shake effect */
+.game.shake {
+  animation: screenShake 0.3s ease-in-out;
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, -1px); }
+  20% { transform: translate(2px, 1px); }
+  30% { transform: translate(-1px, 2px); }
+  40% { transform: translate(1px, -2px); }
+  50% { transform: translate(-2px, 1px); }
+  60% { transform: translate(2px, -1px); }
+  70% { transform: translate(-1px, -2px); }
+  80% { transform: translate(1px, 2px); }
+  90% { transform: translate(-2px, -1px); }
+}
+
+@keyframes scorePopup {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -80%) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -120%) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  html {
+    font-size: 8px;
+  }
+  
+  h1 {
+    font-size: 3.5rem;
+    margin: 1rem 0 0 0;
+  }
+  
+  h2 {
+    font-size: 2.5rem;
+    margin: 1rem;
+  }
+  
+  .game {
+    width: 95vw;
+    height: 50vh;
+    min-height: 250px;
+  }
+  
+  .hammer {
+    width: 45px;
+    height: 65px;
+  }
+  
+  .game-info {
+    gap: 2rem;
+  }
+  
+  h2 {
+    font-size: 2rem;
+  }
+}
+
+/* Carnival decorative elements */
+body::before {
+  content: "🎪🎠🎡";
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  z-index: -1;
+  opacity: 0.6;
+}
+
+body::after {
+  content: "🎯🔨⭐";
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  z-index: -1;
+  opacity: 0.6;
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 7px;
+  }
+  
+  h1 {
+    font-size: 3rem;
+  }
+  
+  .game-info {
+    gap: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.8rem;
+  }
+  
+  .game {
+    height: 45vh;
+    min-height: 200px;
+  }
+  
+  .hammer {
+    width: 40px;
+    height: 60px;
+  }
+  
+  body::before,
+  body::after {
+    font-size: 1.5rem;
+  }
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Talha - Whack-a-mole Game</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="https://i.ibb.co/M6KTWnf/pic.jpg" />
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- Also uploaded the demo of this code in a gif : https://c.tenor.com/x8v1oNUOmg4AAAAd/tenor.gif-->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+
+    <!-- 👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻👇🏻-->
+    <!-- More html-css-js Games Calculators Games Cards Elements Projects on https://www.github.com/he-is-talha -->
+    <!-- 👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻👆🏻-->
+  </head>
+  <body>
+    <h1>Whack-a-mole!</h1>
+    <div class="game-info">
+      <h2>Score: <span class="score">0</span></h2>
+      <h2>Time: <span class="timer">2:00</span></h2>
+    </div>
+    <div class="game">
+      <div class="hole hole1">
+        <div class="mole"></div>
+      </div>
+      <div class="hole hole2">
+        <div class="mole"></div>
+      </div>
+      <div class="hole hole3">
+        <div class="mole"></div>
+      </div>
+      <div class="hole hole4">
+        <div class="mole"></div>
+      </div>
+      <div class="hole hole5">
+        <div class="mole"></div>
+      </div>
+      <div class="hole hole6">
+        <div class="mole"></div>
+      </div>
+      <div class="hammer" id="hammer">
+        <div class="hammer-head"></div>
+        <div class="hammer-connector"></div>
+        <div class="hammer-handle"></div>
+      </div>
+    </div>
+    
+    <!-- Game Over Overlay -->
+    <div id="game-over-overlay" class="game-over-overlay hidden">
+      <div class="game-over-content">
+        <h1>GAME OVER!</h1>
+        <h2>Final Score: <span id="final-score">0</span></h2>
+      </div>
+    </div>
+    
+    <script src="script.js"></script>
+  </body>
+</html>
