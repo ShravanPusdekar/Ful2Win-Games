@@ -1,11 +1,57 @@
+// SCROLL PREVENTION - Nuclear Option for Mobile/Desktop
+function preventScrolling() {
+  // Prevent all scroll events
+  document.addEventListener('scroll', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.scrollTo(0, 0);
+  }, { passive: false, capture: true });
+
+  // Prevent touch scroll events
+  document.addEventListener('touchstart', (e) => {
+    // Allow game interactions but prevent scrolling
+    if (!e.target.closest('.game, .mole, .hole')) {
+      e.preventDefault();
+    }
+  }, { passive: false, capture: true });
+
+  document.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false, capture: true });
+
+  // Prevent wheel scroll
+  document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false, capture: true });
+
+  // Prevent keyboard scroll (arrow keys, page up/down, space)
+  document.addEventListener('keydown', (e) => {
+    const scrollKeys = [32, 33, 34, 35, 36, 37, 38, 39, 40];
+    if (scrollKeys.includes(e.keyCode)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, { passive: false, capture: true });
+
+  // Force scroll position to top
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
+// Initialize scroll prevention immediately
+preventScrolling();
+
+// Game variables
 const holes = document.querySelectorAll(".hole");
 const scoreBoard = document.querySelector(".score");
 const timerDisplay = document.querySelector(".timer");
+const difficultyDisplay = document.querySelector(".difficulty-level");
 const moles = document.querySelectorAll(".mole");
 const hammer = document.querySelector("#hammer");
 const gameArea = document.querySelector(".game");
-const gameOverOverlay = document.querySelector("#game-over-overlay");
-const finalScoreDisplay = document.querySelector("#final-score");
 let lastHole;
 let timeUp = false;
 let score = 0;
@@ -31,18 +77,63 @@ function randomHole(holes) {
 }
 
 function peep() {
-  const time = randomTime(1200, 2500); // Even slower moles - stay up longer
+  // Progressive difficulty based on remaining time
+  const elapsedTime = 120 - gameTimer; // How much time has passed
+  let moleUpTime, nextMoleDelay;
+  
+  if (elapsedTime < 30) {
+    // Easy mode (0-30 seconds): Slow moles
+    moleUpTime = randomTime(1800, 3000);
+    nextMoleDelay = randomTime(800, 1200);
+  } else if (elapsedTime < 60) {
+    // Normal mode (30-60 seconds): Medium speed
+    moleUpTime = randomTime(1200, 2500);
+    nextMoleDelay = randomTime(500, 900);
+  } else if (elapsedTime < 90) {
+    // Hard mode (60-90 seconds): Fast moles
+    moleUpTime = randomTime(800, 1800);
+    nextMoleDelay = randomTime(300, 600);
+  } else {
+    // Insane mode (90-120 seconds): Very fast moles
+    moleUpTime = randomTime(500, 1200);
+    nextMoleDelay = randomTime(200, 400);
+  }
+  
   const hole = randomHole(holes);
   hole.classList.add("up");
+  
   setTimeout(() => {
     hole.classList.remove("up");
     if (!timeUp) {
-      // Add delay before next mole appears
+      // Add delay before next mole appears with progressive difficulty
       setTimeout(() => {
         peep();
-      }, randomTime(300, 800));
+      }, nextMoleDelay);
     }
-  }, time);
+  }, moleUpTime);
+}
+
+// Update difficulty display based on elapsed time
+function updateDifficultyDisplay() {
+  const elapsedTime = 120 - gameTimer;
+  let difficultyText, difficultyColor;
+  
+  if (elapsedTime < 30) {
+    difficultyText = "EASY";
+    difficultyColor = "#00FF00"; // Green
+  } else if (elapsedTime < 60) {
+    difficultyText = "NORMAL";
+    difficultyColor = "#FFD700"; // Gold
+  } else if (elapsedTime < 90) {
+    difficultyText = "HARD";
+    difficultyColor = "#FF8C00"; // Orange
+  } else {
+    difficultyText = "INSANE";
+    difficultyColor = "#FF0000"; // Red
+  }
+  
+  difficultyDisplay.textContent = difficultyText;
+  difficultyDisplay.style.color = difficultyColor;
 }
 
 // Timer functions
@@ -50,6 +141,9 @@ function updateTimer() {
   const minutes = Math.floor(gameTimer / 60);
   const seconds = gameTimer % 60;
   timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  
+  // Update difficulty display
+  updateDifficultyDisplay();
   
   if (gameTimer <= 0) {
     endGame();
@@ -65,10 +159,6 @@ function endGame() {
   clearInterval(timerInterval);
   hammer.classList.remove("active");
   
-  // Show game over overlay with blur
-  finalScoreDisplay.textContent = score;
-  gameOverOverlay.classList.remove("hidden");
-  
   // Send message to parent window
   window.parent.postMessage({ type: "GAME_OVER", score: score }, "*");
 }
@@ -76,6 +166,8 @@ function endGame() {
 function startGame() {
   scoreBoard.textContent = 0;
   timerDisplay.textContent = "2:00";
+  difficultyDisplay.textContent = "EASY";
+  difficultyDisplay.style.color = "#00FF00";
   timeUp = false;
   score = 0;
   gameTimer = 120;
@@ -127,6 +219,7 @@ function bonk(e) {
 let isDraggingHammer = false;
 let hammerStartX = 0;
 let hammerStartY = 0;
+let justHitMole = false; // Track if we just hit a mole
 
 function startHammerDrag(x, y) {
   if (!isGameActive) return false;
@@ -164,7 +257,8 @@ function moveHammer(x, y) {
   // If dragging over a mole, trigger hit
   if (hitMole && !hitMole.classList.contains("hit")) {
     handleSwipeHit(hitMole);
-    stopHammerDrag(); // Stop dragging after hit
+    justHitMole = true; // Mark that we just hit a mole
+    // Keep hammer grabbed after hit - don't stop dragging
   }
 }
 
@@ -297,7 +391,15 @@ gameArea.addEventListener("mousedown", (e) => {
 });
 
 gameArea.addEventListener("mouseup", (e) => {
-  stopHammerDrag();
+  // Reset the hit flag after a short delay to allow continuous hitting
+  setTimeout(() => {
+    justHitMole = false;
+  }, 100);
+  
+  // Only stop dragging if we didn't just hit a mole
+  if (!justHitMole) {
+    stopHammerDrag();
+  }
 });
 
 // NUCLEAR OPTION - Touch events for mobile with maximum override
@@ -326,7 +428,16 @@ gameArea.addEventListener("touchend", (e) => {
   e.preventDefault();
   e.stopPropagation();
   e.stopImmediatePropagation();
-  stopHammerDrag();
+  
+  // Reset the hit flag after a short delay to allow continuous hitting
+  setTimeout(() => {
+    justHitMole = false;
+  }, 100);
+  
+  // Only stop dragging if we didn't just hit a mole
+  if (!justHitMole) {
+    stopHammerDrag();
+  }
 }, { passive: false, capture: true });
 
 // Pointer events for additional compatibility
@@ -353,7 +464,16 @@ gameArea.addEventListener("pointerup", (e) => {
   e.preventDefault();
   e.stopPropagation();
   e.stopImmediatePropagation();
-  stopHammerDrag();
+  
+  // Reset the hit flag after a short delay to allow continuous hitting
+  setTimeout(() => {
+    justHitMole = false;
+  }, 100);
+  
+  // Only stop dragging if we didn't just hit a mole
+  if (!justHitMole) {
+    stopHammerDrag();
+  }
 }, { passive: false, capture: true });
 
 // Prevent context menu on long press
@@ -383,3 +503,25 @@ gameArea.style.touchAction = 'none';
 gameArea.style.webkitTouchAction = 'none';
 gameArea.style.msTouchAction = 'none';
 gameArea.style.pointerEvents = 'auto';
+
+// Continuous scroll position lock
+setInterval(() => {
+  if (window.scrollY !== 0 || window.scrollX !== 0) {
+    window.scrollTo(0, 0);
+  }
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}, 16); // 60fps monitoring
+
+// Additional safety measures for mobile browsers
+window.addEventListener('resize', () => {
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+  }, 100);
+});
+
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+  }, 500);
+});
