@@ -1,0 +1,395 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+:root {
+	--black: #1d1d1d;
+	--grey: #647687;
+	--white: #f1f1f1;
+	--red: #ee1111;
+	--dark-red: #b91d47;
+	--blue: #2d89ef;
+	--dark-blue: #2b5797;
+	--yellow: #ffc40d;
+	--orange: #f2552c;
+	--green: #60a917;
+	--dark-green: #008a00;
+	--pink: #ff0097;
+	--purple: #9f00a7;
+	--default-box-shadow: 0 0.5rem 1rem rgba(45, 45, 45, 0.5);
+	}
+
+*, ::after, ::before {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	}
+
+html {
+	font-size: 62.5%;
+	}
+
+body {
+	background-color: var(--blue);
+	color: var(--white);
+	font-family: 'Roboto', sans-serif;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	/* Nuclear option for mobile webview compatibility */
+	overscroll-behavior: none !important;
+	touch-action: manipulation !important;
+	-webkit-touch-action: manipulation !important;
+	user-select: none !important;
+	-webkit-user-select: none !important;
+	-webkit-touch-callout: none !important;
+	}
+
+canvas {
+	border: solid 0.3rem var(--white);
+	box-shadow: 0 0 3rem rgba(255, 255, 255, 0.5);
+	/* Nuclear option canvas protection */
+	touch-action: none !important;
+	-webkit-touch-action: none !important;
+	user-select: none !important;
+	-webkit-touch-callout: none !important;
+	}
+
+canvas#tetris {
+	height: 85vh;
+	}
+
+.button {
+	min-width: 10rem;
+	height: 3rem;
+	font-size: 2rem;
+	font-family: inherit;
+	letter-spacing: 0.01rem;
+	text-align: center;
+	text-decoration: none;
+	text-transform: uppercase;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: 0.2s ease;
+	margin: 2rem auto;
+	line-height: 2rem;
+	background: transparent;
+	cursor: pointer;
+	padding: 2rem 4rem;
+	}
+
+.button {
+	color: var(--black);
+	border: 1px solid var(--black);
+	}
+
+.button:hover {
+	color: var(--white);
+	background: var(--black);
+	border: 1px solid var(--black);
+	}
+
+.messages {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 80vw;
+	min-height: 6rem;
+	font-size: 2rem;
+	padding: 2rem 3rem;
+	margin: 1.5rem auto;
+	box-shadow: var(--default-box-shadow);
+	background-color: var(--black);
+	border-radius: 0.4rem;
+	color: var(--white);
+	border: 1px solid var(--white);
+	text-align: center;
+	}
+
+.message {
+	display: block;
+	width: 100%;
+	margin: 1.5rem auto;
+	}
+
+.game {
+	display: flex;
+	flex-direction: row;
+	}
+
+.left {
+	width: 60vw;
+	}
+
+.right {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	justify-content: center;
+	width: 35vw;
+	}
+
+.right h3 {
+	text-align: right;
+	font-size: 2rem;
+	padding-bottom: 2rem;
+	}
+
+.game-info {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.level {
+	padding: 0 0 0 3rem;
+	text-transform: uppercase;
+	font-size: 2.5rem;
+	color: #00ff88;
+	text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.score {
+	padding: 0 0 0 3rem;
+	text-transform: uppercase;
+	font-size: 3rem;
+}
+
+.next-piece-container {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+/* Non-intrusive Mobile Responsiveness - Only adds mobile support */
+@media (max-width: 768px) {
+	body {
+		padding: 1rem 0.5rem;
+	}
+	
+	.game {
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+	}
+	
+	.left {
+		display: flex;
+		justify-content: center;
+	}
+	
+	.right {
+		order: 0;
+		width: 100%;
+		flex-direction: row;
+		align-items: flex-start;
+		justify-content: space-between;
+		padding: 0 1rem;
+		margin-bottom: 2rem;
+	}
+	
+	.game-info {
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-bottom: 0;
+	}
+	
+	.level {
+		font-size: 1.8rem;
+		padding: 0;
+		text-align: left;
+	}
+	
+	.score {
+		font-size: 2rem;
+		padding: 0;
+		text-align: left;
+	}
+	
+	.next-piece-container {
+		align-items: center;
+	}
+	
+	.right h3 {
+		font-size: 1.6rem;
+		padding-bottom: 0.5rem;
+		text-align: center;
+		margin: 0;
+	}
+	
+	canvas#tetris {
+		height: 70vh;
+		max-height: 420px;
+		width: auto;
+	}
+	canvas#nextPiece {
+		width: 100px;
+		height: 100px;
+	}
+}
+
+@media (max-width: 480px) {
+	.score {
+		font-size: 1.8rem;
+	}
+	
+	.right h3 {
+		font-size: 1.5rem;
+	}
+	
+	canvas#tetris {
+		height: 65vh;
+		max-height: 380px;
+	}
+	
+	canvas#nextPiece {
+		width: 80px;
+		height: 80px;
+	}
+}
+
+/* Game Over Blur Screen */
+.game-over-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.7);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	z-index: 2000;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+}
+
+.game-over-content {
+	text-align: center;
+	color: var(--white);
+	font-size: 3rem;
+	text-transform: uppercase;
+	text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+	animation: gameOverPulse 2s ease-in-out infinite;
+}
+
+.final-score {
+	font-size: 2rem;
+	margin-top: 2rem;
+	color: #00ff88;
+	text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+}
+
+@keyframes gameOverPulse {
+	0%, 100% { opacity: 0.8; transform: scale(1); }
+	50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Mobile Touch Controls */
+.mobile-controls {
+	display: none;
+	position: fixed;
+	bottom: 0.5rem;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1000;
+	width: 100%;
+	max-width: 280px;
+	padding: 0 1rem;
+}
+
+.control-row {
+	display: flex;
+	justify-content: center;
+	gap: 0.8rem;
+	margin-bottom: 0.8rem;
+}
+
+.control-btn {
+	width: 60px;
+	height: 60px;
+	border: 3px solid rgba(255, 255, 255, 0.8);
+	background: rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(15px);
+	border-radius: 50%;
+	color: var(--white);
+	font-size: 1.6rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	touch-action: manipulation;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+	position: relative;
+}
+
+.control-btn:active {
+	background: rgba(255, 255, 255, 0.25);
+	transform: scale(0.92);
+	box-shadow: 0 2px 15px rgba(0, 0, 0, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.3);
+	border-color: rgba(255, 255, 255, 1);
+}
+
+.control-btn:hover {
+	background: rgba(255, 255, 255, 0.15);
+	box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+	border-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Enhanced button styling for better visibility */
+.control-btn::before {
+	content: '';
+	position: absolute;
+	top: -1px;
+	left: -1px;
+	right: -1px;
+	bottom: -1px;
+	border-radius: 50%;
+	background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+	z-index: -1;
+}
+
+/* Show controls on mobile */
+@media (max-width: 768px) {
+	.mobile-controls {
+		display: block;
+		bottom: 0.3rem;
+	}
+	
+	body {
+		padding-bottom: 140px; /* Space for controls */
+	}
+	
+	.control-btn {
+		width: 55px;
+		height: 55px;
+		font-size: 1.5rem;
+		border-width: 2px;
+	}
+	
+	.control-row {
+		gap: 0.6rem;
+		margin-bottom: 0.6rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.control-btn {
+		width: 50px;
+		height: 50px;
+		font-size: 1.3rem;
+		border-width: 2px;
+	}
+	
+	.control-row {
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+}
