@@ -42,50 +42,46 @@ export const getSwingBlockVelocity = (engine, time) => {
   }
   let hard
   
-  // Balanced speed progression - start moderate and increase after 50 floors
-  switch (true) {
-    case successCount < 1:
-      hard = 0 // No movement initially
-      break
-    case successCount < 10:
-      hard = 0.25 // Moderate start - not too slow, not too fast
-      break
-    case successCount < 20:
-      hard = 0.3 // Slightly faster
-      break
-    case successCount < 30:
-      hard = 0.35 // Gradually increasing
-      break
-    case successCount < 40:
-      hard = 0.4 // Getting comfortable
-      break
-    case successCount < 50:
-      hard = 0.45 // Approaching normal speed
-      break
-    case successCount < 60:
-      hard = 0.6 // Noticeable increase after 50 floors
-      break
-    case successCount < 70:
-      hard = 0.7 // Getting challenging
-      break
-    case successCount < 80:
-      hard = 0.8 // Fast
-      break
-    case successCount < 90:
-      hard = 0.9 // Very fast
-      break
-    case successCount < 100:
-      hard = 1.0 // Extremely fast
-      break
-    default:
-      hard = 1.1 // Maximum challenge
-      break
+  // First block should be stationary
+  if (successCount < 1) {
+    hard = 0
+  } else {
+    // Smooth exponential curve for natural speed progression
+    // Starts at 0.2 for block 1, reaches ~1.0 around block 100
+    const baseSpeed = 0.2
+    const maxSpeed = 1.0
+    const growthRate = 0.012 // Slower growth rate for gentler beginning
+    
+    // Exponential growth curve: y = baseSpeed + (maxSpeed - baseSpeed) * (1 - e^(-growthRate * x))
+    const normalizedProgress = 1 - Math.exp(-growthRate * successCount)
+    hard = baseSpeed + (maxSpeed - baseSpeed) * normalizedProgress
+    
+    // Cap the maximum speed to prevent it from getting too crazy
+    hard = Math.min(hard, maxSpeed)
   }
   
   if (engine.getVariable(constant.hardMode)) {
     hard = Math.min(hard * 1.2, 1.5) // Increase hard mode speed but cap it
   }
-  return Math.sin(time / (200 / hard))
+  
+  // First block should be stationary
+  if (hard === 0) {
+    return 0
+  }
+  
+  // Natural pendulum motion with easing
+  const frequency = hard * 0.008 // Slower base frequency for more natural feel
+  const phase = time * frequency
+  
+  // Use a combination of sine and cosine for more natural pendulum motion
+  const primarySwing = Math.sin(phase)
+  const dampening = Math.cos(phase * 0.1) * 0.1 // Subtle secondary motion
+  
+  // Apply easing function for smoother acceleration/deceleration
+  const easedSwing = primarySwing + dampening
+  const smoothedSwing = easedSwing * (1 - Math.abs(easedSwing) * 0.1) // Slight ease at extremes
+  
+  return smoothedSwing
 }
 
 export const getLandBlockVelocity = (engine, time) => {

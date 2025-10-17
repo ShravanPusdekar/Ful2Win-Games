@@ -138,13 +138,13 @@ const nextLevel = () => {
 
 //Pick random objects from the items array
 const generateRandom = (size = 4) => {
-    //temporary array
-    let tempArray = [...items];
+    //temporary array - shuffle the entire items array first for better randomness
+    let tempArray = shuffleArray([...items]);
     //initializes cardValues array
     let cardValues = [];
     //size should be double (4*4 matrix)/2 since pairs of objects would exist
     size = (size * size) / 2;
-    //Random object selection
+    //Random object selection - now from pre-shuffled array
     for (let i = 0; i < size; i++) {
         const randomIndex = Math.floor(Math.random() * tempArray.length);
         cardValues.push(tempArray[randomIndex]);
@@ -154,11 +154,21 @@ const generateRandom = (size = 4) => {
     return cardValues;
 };
 
+    // Fisher-Yates shuffle algorithm for truly random card placement
+    const shuffleArray = (array) => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
     const matrixGenerator = (cardValues, size = 4) => {
     gameContainer.innerHTML = "";
     cardValues = [...cardValues, ...cardValues];
-    //simple shuffle
-    cardValues.sort(() => Math.random() - 0.5);
+    //proper shuffle using Fisher-Yates algorithm
+    cardValues = shuffleArray(cardValues);
     for (let i = 0; i < size * size; i++) {
         /*
             Create Cards
@@ -191,7 +201,7 @@ const generateRandom = (size = 4) => {
             firstCard = card;
             //current cards value becomes firstCardValue
             firstCardValue = card.getAttribute("data-card-value");
-            } else {
+            } else if (card !== firstCard) { // Prevent clicking the same card twice
             //increment moves since user selected second card
             movesCounter();
             //secondCard and value
@@ -209,8 +219,11 @@ const generateRandom = (size = 4) => {
                 // Add points for successful match
                 updateScore(10);
                 
-                //check if winCount ==half of cardValues (level complete)
-                if (winCount == Math.floor(cardValues.length / 2)) {
+                //check if winCount equals half of cardValues OR if only one card remains unmatched (level complete)
+                const totalPairs = Math.floor(cardValues.length / 2);
+                const unmatchedCards = cards.length - (winCount * 2);
+                
+                if (winCount == totalPairs || unmatchedCards <= 1) {
                     playSound("success");
                     nextLevel();
                 }
@@ -226,6 +239,9 @@ const generateRandom = (size = 4) => {
                 }, 900);
                 playSound("incorrect2");
             }
+            } else {
+                // If same card is clicked twice, just flip it back
+                card.classList.remove("flipped");
             }
         }
         });

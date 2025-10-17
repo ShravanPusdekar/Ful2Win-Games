@@ -36,9 +36,25 @@
         <path id="arc" fill="none" stroke="url(#ArcGradient)" stroke-width="4" d="M150,250c250-400,550-400,750,0"  pointer-events="none"/>
         <defs>
             <g id="arrow">
-                <line x2="60" fill="none" stroke="#888" stroke-width="2" />
-                <polygon fill="#888" points="64 0 58 2 56 0 58 -2" />
-                <polygon fill="#88ce02" points="2 -3 -4 -3 -1 0 -4 3 2 3 5 0" />
+                <!-- Arrow shaft with wood texture -->
+                <line x2="90" fill="none" stroke="#8B4513" stroke-width="5" />
+                <line x2="90" y1="-1" y2="-1" fill="none" stroke="#A0522D" stroke-width="1" />
+                <line x2="90" y1="1" y2="1" fill="none" stroke="#654321" stroke-width="1" />
+                
+                <!-- Metal arrowhead with gradient -->
+                <defs>
+                    <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#C0C0C0;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#E8E8E8;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#A0A0A0;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <polygon fill="url(#metalGradient)" stroke="#666" stroke-width="0.5" points="96 0 84 4 86 0 84 -4" />
+                
+                <!-- Colorful fletching -->
+                <polygon fill="#FF4444" points="2 -5 -8 -5 -3 0 -8 5 2 5 6 0" />
+                <polygon fill="#44FF44" points="1 -4 -6 -4 -2 0 -6 4 1 4 4 0" />
+                <polygon fill="#4444FF" points="0 -3 -4 -3 -1 0 -4 3 0 3 2 0" />
             </g>
         </defs>
         <g id="target">
@@ -48,10 +64,32 @@
             <path fill="#F4531C" d="M903.2,253.2c-2.9,2.9-6.7,3.6-8.3,1.7c-1.5-1.8-0.6-5.4,2-8c2.6-2.6,6.2-3.6,8-2 C906.8,246.5,906.1,250.2,903.2,253.2z" />
         </g>
         <g id="bow" fill="none" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="none">
-          <polyline fill="none" stroke="#ddd" stroke-linecap="round" points="138,200 138,250 138,300"/>
-          <path fill="none" stroke="#88ce02" stroke-width="3" stroke-linecap="round" d="M138,300 c0-10.1,12-25.1,12-50s-12-39.9-12-50"/>
+          <!-- Bow limbs with high contrast design -->
+          <defs>
+            <linearGradient id="bowMetalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#2C3E50;stop-opacity:1" />
+              <stop offset="30%" style="stop-color:#34495E;stop-opacity:1" />
+              <stop offset="70%" style="stop-color:#2C3E50;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#1A252F;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          
+          <!-- Main bow body -->
+          <polyline fill="none" stroke="url(#bowMetalGradient)" stroke-linecap="round" stroke-width="6" points="125,180 125,250 125,320"/>
+          <polyline fill="none" stroke="#00FFFF" stroke-linecap="round" stroke-width="2" points="123,180 123,250 123,320"/>
+          
+          <!-- Bow grip area -->
+          <rect x="122" y="240" width="6" height="20" fill="#2C3E50" stroke="#00FFFF" stroke-width="2" rx="3"/>
+          
+          <!-- Bow string with tension -->
+          <path fill="none" stroke="#00FFFF" stroke-width="4" stroke-linecap="round" d="M125,320 c0-15.15,18-37.65,18-75s-18-59.85-18-75"/>
+          <path fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" d="M125,318 c0-14.85,17-36.85,17-73s-17-58.15-17-73"/>
+          
+          <!-- Bow tips -->
+          <circle cx="125" cy="180" r="4" fill="#00FFFF" stroke="#FFFFFF" stroke-width="2"/>
+          <circle cx="125" cy="320" r="4" fill="#00FFFF" stroke="#FFFFFF" stroke-width="2"/>
         </g>
-      <g class="arrow-angle"><use x="150" y="250" xlink:href="#arrow"/></g>
+      <g class="arrow-angle"><use x="143" y="250" xlink:href="#arrow"/></g>
       <clipPath id="mask">
         <polygon opacity=".5" points="0,0 1500,0 1500,400 0,400" pointer-events="none"/>
       </clipPath>
