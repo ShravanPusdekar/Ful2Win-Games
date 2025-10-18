@@ -1,0 +1,201 @@
+/* General Styling - Mobile First */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-image: url('https://raw.githubusercontent.com/arpit456jain/Amazing-Js-Projects/master/Candy%20Crush/utils/bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Montserrat', sans-serif;
+  color: #85796b;
+  padding: 10px;
+  overflow-x: hidden;
+}
+
+/* Scoreboard Styling - Clean Design */
+.scoreBoard {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  width: 95vw;
+  max-width: 400px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+h3 {
+  font-family: 'Montserrat', sans-serif;
+  text-transform: uppercase;
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  letter-spacing: 1.5px;
+}
+
+h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+/* Game Grid - Mobile Optimized */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  width: 95vw;
+  max-width: 400px;
+  aspect-ratio: 1;
+  background-color: rgba(109, 127, 151, 0.5);
+  padding: 2px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) inset, 0 1px 0 #fff;
+  margin: 0 auto;
+  touch-action: none;
+}
+
+.grid div {
+  width: calc(12.5% - 1px);
+  aspect-ratio: 1;
+  background-size: cover;
+  background-position: center;
+  border-radius: 3px;
+  cursor: pointer;
+  touch-action: none;
+  position: relative;
+  transition: transform 0.15s ease-out;
+}
+
+/* Animation classes for piece movement */
+.grid div.moving {
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform-origin: center;
+}
+
+.grid div.swapping {
+  animation: swapPulse 0.25s ease-in-out;
+  z-index: 15;
+}
+
+.grid div.invalid-move {
+  animation: invalidShake 0.4s ease-in-out;
+}
+
+.grid div.disappearing {
+  animation: disappearPiece 0.3s ease-in-out forwards;
+}
+
+@keyframes swapPulse {
+  0% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  50% { 
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+  }
+  100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+}
+
+@keyframes invalidShake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 0); }
+  75% { transform: translate(2px, 0); }
+}
+
+@keyframes disappearPiece {
+  0% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+/* Active state for touch */
+.grid div:active {
+  transform: scale(0.95);
+}
+
+/* Splash Screen Styling */
+#splashScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: #000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  overflow: hidden;
+}
+
+#splashScreen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Timer - Clean Design */
+#timer {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.5px;
+}
+
+/* Initially Hide Game Elements */
+.grid, .scoreBoard {
+  display: none;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .grid {
+    max-width: 500px;
+  }
+  
+  .scoreBoard {
+    max-width: 500px;
+  }
+  
+  h1 {
+    font-size: 40px;
+  }
+  
+  h3 {
+    font-size: 18px;
+  }
+}
