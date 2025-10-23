@@ -1,0 +1,28 @@
+# Node/Vite project ignores
+node_modules/
+dist/
+dist-ssr/
+.cache/
+.tmp/
+.temp/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Testing/Coverage
+coverage/
+
+# Env files
+.env
+.env.*
+
+# Build artifacts
+*.local

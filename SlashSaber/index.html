@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <title>Slash Saber | An endless slashing rush</title>
+        <meta name="description" content="Slash Saber is an endless game where you slash your way through onslaught of obstacles.">
+        <meta name="keywords" content="threejs game, endless game, bamboo cutting game, beat saber threejs, endless runner">
+        <meta name="robots" content="all, follow">
+        <meta name="author" content="honzaap">
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-JTZ1GSM6CN"></script>
+        <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-JTZ1GSM6CN');</script>
+        <!-- Favicon -->
+        <link rel="icon" href="./favicon.ico">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
+        <meta name="msapplication-TileColor" content="#da532c">
+        <meta name="theme-color" content="#ffffff">
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://slashsaber.com"/>
+        <meta property="og:title" content="Slash Saber | An endless slashing rush"/>
+        <meta property="og:description" content="Slash Saber is an endless game where you slash your way through onslaught of obstacles."/>
+        <meta property="og:image" content="https://slashsaber.com/metaimg.png"/>
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://slashsaber.com"/>
+        <meta property="twitter:title" content="Slash Saber | An endless slashing rush"/>
+        <meta property="twitter:description" content="Slash Saber is an endless game where you slash your way through onslaught of obstacles."/>
+        <meta property="twitter:image" content="https://slashsaber.com/metaimg.png"/>
+        <!-- Fonts -->
+        <link rel="preload" href="/fonts/Kanit-Regular.ttf" as="font" type="font/ttf" crossorigin> 
+        <link rel="preload" href="/fonts/Kanit-Medium.ttf" as="font" type="font/ttf" crossorigin> 
+        <link rel="preload" href="/fonts/Bree-Serif-Regular.ttf" as="font" type="font/ttf" crossorigin> 
+    </head>
+    <body>
+        <main id="main" class="page" style="display: none;">
+            <nav class="navbar">
+                <img class="nav-logo" src="/logo_white.svg" alt="Slash Saber logo">
+            </nav>
+            <article class="container">
+                <h1>Slash Saber</h1>
+                <p class="motto">An endless slashing rush</p>
+                <div class="btn-container">
+                    <button class="btn-slash" id="startBtn">
+                        <div class="bg"></div>
+                        <span class="slash"></span>
+                        Enter game
+                    </button>
+                </div>
+                <div class="how-play">
+                    <h2>How to play</h2>
+                    <div class="list">
+                        <figure class="item">
+                            <div class="ico">
+                                <img src="/icons/how_play_1.svg" alt="Slashing bamboo">
+                            </div>
+                            <figcaption>Slash obstacles with your sword using the mouse or touch</figcaption>
+                        </figure>
+                        <figure class="item">
+                            <div class="ico">
+                                <img src="/icons/how_play_2.svg" alt="Slash from wrong direction">
+                            </div>
+                            <figcaption>Some obstacles can only be slashed from one direction</figcaption>
+                        </figure>
+                        <figure class="item">
+                            <div class="ico">
+                                <img src="/icons/how_play_3.svg" alt="Three obstacles missed">
+                            </div>
+                            <figcaption>Game ends when you let 3 obstacles hit you</figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </article>
+            <div class="leaderboard-container" id="leaderBoard">
+                <!--LeaderBoard /-->
+            </div>
+            <img src="/img/background_text.png" alt="Slash Saber" class="background-text">
+            <script>
+                const startBtn = document.getElementById("startBtn");
+                startBtn.onmouseenter = () => {
+                    startBtn.querySelector(".slash").classList.add("anim");
+                }
+    
+                startBtn.onmouseleave = () => {
+                    startBtn.querySelector(".slash").classList.remove("anim");
+                }
+            </script>
+        </main>
+        <div id="app"></div>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
+</html>

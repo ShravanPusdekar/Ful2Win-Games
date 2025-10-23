@@ -1,0 +1,40 @@
+# Global ignores for this monorepo
+
+# Node.js
+node_modules/
+**/node_modules/
+
+# Builds / Bundles
+build/
+dist/
+**/dist/
+.out/
+.next/
+out/
+coverage/
+
+# Caches
+.cache/
+**/.cache/
+.parcel-cache/
+.turbo/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.*
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Misc
+.vercel
+.svelte-kit/
