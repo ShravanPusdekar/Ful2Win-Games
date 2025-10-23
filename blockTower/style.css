@@ -1,0 +1,183 @@
+@import url("https://fonts.googleapis.com/css?family=Comfortaa");
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  font-family: "Comfortaa", cursive;
+}
+#container {
+  width: 100%;
+  height: 100%;
+}
+#container #game-stats {
+  position: absolute;
+  top: 15px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  transition: transform 0.5s ease;
+  transform: translatey(0px);
+  z-index: 10;
+}
+
+#container #game-stats > div {
+  font-size: clamp(12px, 2.5vw, 18px);
+  font-weight: 700;
+  color: #2c2c2c;
+  text-align: center;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 240, 0.95) 100%);
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.12), 0 1px 6px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  flex: 1;
+  max-width: 140px;
+  min-width: 0;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#container #game-stats > div:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+#container #blocks-count {
+  background: linear-gradient(135deg, rgba(147, 197, 253, 0.95) 0%, rgba(96, 165, 250, 0.95) 100%);
+  color: #1e40af;
+  border-color: rgba(147, 197, 253, 0.6);
+}
+
+#container #score {
+  background: linear-gradient(135deg, rgba(167, 243, 208, 0.95) 0%, rgba(110, 231, 183, 0.95) 100%);
+  color: #065f46;
+  border-color: rgba(167, 243, 208, 0.6);
+}
+
+#container #timer {
+  background: linear-gradient(135deg, rgba(253, 186, 116, 0.95) 0%, rgba(251, 146, 60, 0.95) 100%);
+  color: #9a3412;
+  border-color: rgba(253, 186, 116, 0.6);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+  #container #game-stats {
+    gap: 6px;
+    padding: 0 8px;
+    top: 10px;
+  }
+  
+  #container #game-stats > div {
+    padding: 8px 12px;
+    font-size: clamp(10px, 3vw, 14px);
+    border-radius: 10px;
+    max-width: 110px;
+  }
+}
+
+@media (max-width: 400px) {
+  #container #game-stats {
+    gap: 4px;
+    padding: 0 5px;
+  }
+  
+  #container #game-stats > div {
+    padding: 6px 10px;
+    font-size: clamp(9px, 3.5vw, 12px);
+    border-radius: 8px;
+  }
+}
+#container #game {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+#container .game-over {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 85%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+#container .game-over * {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  opacity: 0;
+  transform: translatey(-50px);
+  color: #334;
+}
+#container .game-over h2 {
+  margin: 0;
+  padding: 0;
+  font-size: 40px;
+}
+#container #instructions {
+  position: absolute;
+  width: 100%;
+  top: 12vh;
+  left: 0;
+  text-align: center;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  opacity: 0;
+  font-size: clamp(12px, 2vh, 18px);
+  font-weight: 600;
+  color: #334;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  #container #instructions {
+    top: 10vh;
+    font-size: clamp(10px, 2.2vh, 14px);
+    padding: 0 15px;
+  }
+}
+#container #instructions.hide {
+  opacity: 0 !important;
+}
+
+#container #perfect-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: clamp(24px, 6vw, 48px);
+  font-weight: 900;
+  color: #10b981;
+  text-shadow: 0 2px 8px rgba(16, 185, 129, 0.5), 0 4px 16px rgba(16, 185, 129, 0.3);
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  letter-spacing: 2px;
+}
+#container.playing #instructions {
+  opacity: 1;
+}
+#container.ended #game-stats {
+  transform: translatey(0px);
+}
+#container.ended .game-over * {
+  opacity: 1;
+  transform: translatey(0);
+}
+#container.ended .game-over p {
+  transition-delay: 0.3s;
+}
