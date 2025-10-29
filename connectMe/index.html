@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head><base href='./' />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
+    <title>Connect Me</title>
+    
+    <style type="text/css">
+        body
+        {
+            padding: 0;
+            margin: 0;
+            background: #000000;
+            color: white;
+            font: 1em/2em Arial, Helvetica;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: rgb(0, 0, 0, 0);
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        canvas {
+            touch-action: auto !important;
+            -webkit-touch-action: auto !important;
+            -ms-touch-action: auto !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        
+        /* Remove 300ms tap delay on mobile */
+        html {
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+        }
+        
+        /* Ensure no delays on any clickable elements */
+        button, a, [onclick], [role="button"] {
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script src="js/phaser.af.min.js"></script>
+    <script src="js/game.min.js"></script>
+    
+    <script>
+        // CRITICAL: FastClick-style implementation to eliminate 300ms delay
+        (function() {
+            console.log('=== FASTCLICK IMPLEMENTATION STARTING ===');
+            
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchStartTime = 0;
+            
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 0) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                    touchStartTime = Date.now();
+                }
+            }, { passive: true, capture: true });
+            
+            document.addEventListener('touchend', function(e) {
+                if (e.changedTouches.length === 0) return;
+                
+                const touch = e.changedTouches[0];
+                const touchEndX = touch.clientX;
+                const touchEndY = touch.clientY;
+                const touchEndTime = Date.now();
+                
+                // Check if it's a tap (not a swipe)
+                const deltaX = Math.abs(touchEndX - touchStartX);
+                const deltaY = Math.abs(touchEndY - touchStartY);
+                const deltaTime = touchEndTime - touchStartTime;
+                
+                // If movement is small and time is short, it's a tap
+                if (deltaX < 10 && deltaY < 10 && deltaTime < 500) {
+                    console.log('FastClick: Tap detected, triggering immediate click');
+                    
+                    // Visual feedback - show tap location
+                    const feedback = document.createElement('div');
+                    feedback.style.position = 'fixed';
+                    feedback.style.left = touchEndX + 'px';
+                    feedback.style.top = touchEndY + 'px';
+                    feedback.style.width = '40px';
+                    feedback.style.height = '40px';
+                    feedback.style.marginLeft = '-20px';
+                    feedback.style.marginTop = '-20px';
+                    feedback.style.borderRadius = '50%';
+                    feedback.style.backgroundColor = 'rgba(0, 212, 255, 0.5)';
+                    feedback.style.pointerEvents = 'none';
+                    feedback.style.zIndex = '99999';
+                    feedback.style.transition = 'all 0.3s ease-out';
+                    document.body.appendChild(feedback);
+                    
+                    setTimeout(function() {
+                        feedback.style.transform = 'scale(2)';
+                        feedback.style.opacity = '0';
+                    }, 10);
+                    
+                    setTimeout(function() {
+                        document.body.removeChild(feedback);
+                    }, 350);
+                    
+                    // Create and dispatch a synthetic click event immediately
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window,
+                        clientX: touchEndX,
+                        clientY: touchEndY
+                    });
+                    
+                    const target = document.elementFromPoint(touchEndX, touchEndY);
+                    if (target) {
+                        target.dispatchEvent(clickEvent);
+                        console.log('FastClick: Synthetic click dispatched to', target.tagName);
+                    }
+                }
+            }, { passive: true, capture: true });
+            
+            console.log('=== FASTCLICK ACTIVE ===');
+        })();
+    </script>
+    
+    <script>
+        // CRITICAL: Fix for unresponsive/delayed button clicks in Phaser game
+        (function() {
+            console.log('=== BUTTON TOUCH FIX INITIALIZING ===');
+            
+            // Wait for game to initialize
+            setTimeout(function() {
+                const canvas = document.querySelector('canvas');
+                if (!canvas) {
+                    console.log('Canvas not found, retrying...');
+                    setTimeout(arguments.callee, 500);
+                    return;
+                }
+                
+                console.log('Canvas found, applying touch fixes');
+                
+                // Force canvas to accept all touch events immediately
+                canvas.style.touchAction = 'auto';
+                canvas.style.pointerEvents = 'auto';
+                
+                // Create aggressive click/touch forwarder
+                function forceClick(e) {
+                    if (!window.game || !window.game.input) return;
+                    
+                    console.log('Touch/Click detected at:', e.clientX, e.clientY);
+                    
+                    // Get canvas bounds
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    console.log('Canvas coords:', x, y);
+                    
+                    // Force Phaser to process the input immediately
+                    try {
+                        if (window.game.input.activePointer) {
+                            window.game.input.activePointer.x = x;
+                            window.game.input.activePointer.y = y;
+                            
+                            // Trigger pointer down
+                            if (e.type.includes('start') || e.type.includes('down')) {
+                                window.game.input.activePointer.isDown = true;
+                                window.game.input.activePointer.justPressed();
+                                console.log('Forced pointer DOWN');
+                            }
+                            
+                            // Trigger pointer up
+                            if (e.type.includes('end') || e.type.includes('up')) {
+                                window.game.input.activePointer.isDown = false;
+                                window.game.input.activePointer.justReleased();
+                                console.log('Forced pointer UP');
+                            }
+                        }
+                    } catch(err) {
+                        console.log('Phaser input override error:', err.message);
+                    }
+                }
+                
+                // Add multiple event listeners for maximum compatibility
+                const events = ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click'];
+                
+                events.forEach(function(eventType) {
+                    canvas.addEventListener(eventType, function(e) {
+                        // Don't prevent default - let Phaser handle it too
+                        forceClick(e);
+                    }, { passive: true, capture: false });
+                });
+                
+                console.log('=== BUTTON TOUCH FIX ACTIVE ===');
+                
+                // Also monitor for Phaser input delays
+                if (window.game && window.game.input) {
+                    // Reduce input poll rate for faster response
+                    window.game.input.pollRate = 0; // Poll every frame
+                    console.log('Set Phaser input poll rate to 0 (fastest)');
+                    
+                    // Disable tap delay in Phaser
+                    if (window.game.input.touch) {
+                        window.game.input.touch.preventDefault = false;
+                    }
+                }
+                
+                // Check periodically for game state and force input update
+                setInterval(function() {
+                    if (window.game && window.game.input) {
+                        window.game.input.update();
+                    }
+                }, 16); // ~60fps
+                
+            }, 500);
+        })();
+    </script>
+    
+    <script>
+        // Aggressive sound button fix - monitor and invert the muted state
+        (function() {
+            let realMutedState = false; // Our true state: false = playing, true = muted
+            let isFixActive = false;
+            
+            // Wait for game to load
+            setTimeout(function() {
+                console.log('=== SOUND FIX INITIALIZING ===');
+                
+                // Find canvas for touch handling
+                const canvases = document.querySelectorAll('canvas');
+                canvases.forEach(function(canvas) {
+                    canvas.style.touchAction = 'manipulation';
+                    canvas.style.webkitTouchAction = 'manipulation';
+                });
+                
+                // Monitor and intercept the muted variable
+                if (typeof window.muted !== 'undefined') {
+                    console.log('Found window.muted, initial value:', window.muted);
+                    
+                    // Store the initial state - invert it for UI
+                    realMutedState = window.muted;
+                    
+                    // Create a property that inverts the UI but keeps audio correct
+                    let internalMuted = window.muted;
+                    
+                    Object.defineProperty(window, 'muted', {
+                        get: function() {
+                            // Return the real state for UI
+                            return realMutedState;
+                        },
+                        set: function(value) {
+                            console.log('=== BUTTON CLICKED ===');
+                            console.log('Game toggling muted to:', value);
+                            
+                            // Store the value directly
+                            realMutedState = value;
+                            console.log('UI shows X:', realMutedState ? 'YES (muted)' : 'NO (playing)');
+                            console.log('Audio state:', realMutedState ? 'MUTED' : 'PLAYING');
+                            
+                            // Control audio with the same state (no inversion)
+                            controlAudio(realMutedState);
+                        },
+                        configurable: true
+                    });
+                    
+                    isFixActive = true;
+                    console.log('=== SOUND FIX ACTIVE ===');
+                    console.log('Expected: X visible = MUTED, No X = PLAYING');
+                }
+                
+                // Don't override the functions - let them work normally
+                console.log('Keeping original resumeMusic and pauseMusic functions');
+                
+                // Periodically check for music object
+                const checkMusicInterval = setInterval(function() {
+                    if (window.music) {
+                        console.log('Music object found!');
+                        // Apply current muted state to music
+                        if (realMutedState) {
+                            window.music.stop();
+                            console.log('Initial state: music stopped (muted)');
+                        }
+                        clearInterval(checkMusicInterval);
+                    }
+                }, 100);
+                
+                // Clear interval after 5 seconds
+                setTimeout(function() {
+                    clearInterval(checkMusicInterval);
+                }, 5000);
+                
+            }, 1000);
+            
+            function controlAudio(shouldMute) {
+                console.log('=== CONTROLLING AUDIO ===');
+                console.log('Should mute:', shouldMute);
+                
+                // Control HTML5 audio elements
+                const audioElements = document.querySelectorAll('audio');
+                console.log('Found', audioElements.length, 'audio elements');
+                audioElements.forEach(function(audio) {
+                    audio.muted = shouldMute;
+                    if (shouldMute) {
+                        audio.pause();
+                        console.log('Paused audio element');
+                    } else {
+                        audio.play().catch(function(e) {
+                            console.log('Audio play prevented:', e.message);
+                        });
+                    }
+                });
+                
+                // Control Phaser sound if available
+                try {
+                    if (window.game && window.game.sound) {
+                        window.game.sound.mute = shouldMute;
+                        console.log('Set Phaser game.sound.mute to', shouldMute);
+                    }
+                } catch(e) {
+                    console.log('Could not control Phaser sound:', e.message);
+                }
+                
+                // Control music object directly - this is the key!
+                try {
+                    if (window.music) {
+                        console.log('Found window.music object');
+                        if (shouldMute) {
+                            window.music.stop();
+                            console.log('Called music.stop()');
+                        } else {
+                            // Use restart with parameters from original resumeMusic
+                            window.music.restart("", 0, 0.5, true);
+                            console.log('Called music.restart()');
+                        }
+                    } else {
+                        console.log('window.music not found yet');
+                    }
+                } catch(e) {
+                    console.log('Error controlling music object:', e.message);
+                }
+                
+                console.log('=== AUDIO CONTROL COMPLETE ===');
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- Custom Preloader -->
+    <div id="custom-preloader" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        flex-direction: column;
+    ">
+        <img src="imgs/bgs/preloader.jpg" alt="Loading..." style="
+            max-width: 90%;
+            max-height: 70%;
+            object-fit: contain;
+            margin-bottom: 20px;
+        ">
+        <div style="
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            animation: pulse 1.5s ease-in-out infinite;
+        ">Loading...</div>
+    </div>
+    
+    <div id="game"></div>
+    
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+    
+    <script>
+        // Hide preloader when game is ready
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const preloader = document.getElementById('custom-preloader');
+                if (preloader) {
+                    preloader.style.transition = 'opacity 0.5s ease-out';
+                    preloader.style.opacity = '0';
+                    setTimeout(function() {
+                        preloader.style.display = 'none';
+                    }, 500);
+                }
+            }, 1000); // Give game 1 second to initialize
+        });
+        
+        // Also check for Phaser game ready state
+        const checkGameReady = setInterval(function() {
+            if (window.game && window.game.state && window.game.state.current) {
+                const preloader = document.getElementById('custom-preloader');
+                if (preloader && preloader.style.display !== 'none') {
+                    preloader.style.transition = 'opacity 0.5s ease-out';
+                    preloader.style.opacity = '0';
+                    setTimeout(function() {
+                        preloader.style.display = 'none';
+                    }, 500);
+                    clearInterval(checkGameReady);
+                }
+            }
+        }, 100);
+        
+        // Failsafe: remove after 5 seconds max
+        setTimeout(function() {
+            clearInterval(checkGameReady);
+            const preloader = document.getElementById('custom-preloader');
+            if (preloader) {
+                preloader.style.transition = 'opacity 0.5s ease-out';
+                preloader.style.opacity = '0';
+                setTimeout(function() {
+                    preloader.style.display = 'none';
+                }, 500);
+            }
+        }, 5000);
+    </script>
+</body>
+
+</html>
