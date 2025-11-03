@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Star Blaster</title>
+	<link rel="Shortcut Icon" href="/templates/phoboslab/phoboslab.ico" />
+	<link rel="apple-touch-icon" href="media/icon-128.png"/>
+	<meta name="viewport" content="width=device-width; initial-scale=1; maximum-scale=1; user-scalable=0;"/>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<style type="text/css">
+		html,body {
+			background-color: #25272b;
+			background-image: url(phobos.png);
+			background-position: 54px 105px;
+			background-attachment: fixed;
+			background-repeat: no-repeat;
+			color: #fff;
+			font-family: helvetica, arial, sans-serif;
+			margin: 0;
+			padding: 0;
+			font-size: 12pt;
+			min-height: 416px;
+		}
+		
+		#canvas {
+			background-color: #000;
+			display: none;
+			position: absolute;
+			margin: auto;
+			top: 0;
+			left: 0;
+			right: 0;
+			width: 480px;
+			height: 720px;
+			z-index: 80;
+		}
+		
+		#making-of {
+			display: none;
+			position: absolute;
+			margin: auto;
+			left: 10px;
+			bottom: 10px;
+		}
+		
+		#canvas.desktop {
+			bottom: 0;
+			border: 1px solid #555;
+			cursor: url('data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto;
+		}
+		
+		#rotate {
+			width: 125px;
+			height: 180px;
+			position: fixed;
+			margin: auto;
+			left: 0;
+			right: 0;
+			top: 30px;
+			display: none;
+		}
+		
+		#loading {
+			text-align: center;
+			margin-top: 40px;
+		}
+		
+		#nocanvas {
+			width: 360px;
+			margin: 150px auto;
+		}
+		
+		a {
+			color: #8BA7C4;
+		}
+		
+		a:hover {
+			color: #fff;
+		}
+		
+		img {
+			border: 0;
+		}
+		
+		#muteButton {
+			position: fixed;
+			top: 20px;
+			left: 20px;
+			width: 50px;
+			height: 50px;
+			background: rgba(0, 0, 0, 0.7);
+			border: 2px solid #8BA7C4;
+			border-radius: 50%;
+			cursor: pointer;
+			z-index: 200;
+			display: none;
+			text-align: center;
+			line-height: 50px;
+			font-size: 24px;
+			color: #8BA7C4;
+			transition: all 0.3s;
+			touch-action: manipulation;
+			user-select: none;
+			-webkit-user-select: none;
+			-webkit-touch-callout: none;
+		}
+		
+		#muteButton:hover {
+			background: rgba(139, 167, 196, 0.3);
+			border-color: #fff;
+			color: #fff;
+			transform: scale(1.1);
+		}
+		
+		#muteButton.muted {
+			background: rgba(255, 0, 0, 0.5);
+			border-color: #ff4444;
+			color: #ff4444;
+		}
+		
+		#scoreBox {
+			position: fixed; /* wtf android? WTF? */
+			display: none;
+			width: 480px;
+			height: 100px;
+			left: 0;
+			top: 0;
+			right: 0;
+			margin: auto;
+			text-align: center;
+			z-index: 100;
+			cursor: auto;
+		}
+		
+		#scoreForm {
+			display: none !important;
+		}
+		
+		#tweetLink {
+			margin-top: 30px;
+			display: none !important;
+		}
+		
+		#scores {
+			display: none !important;
+			position: fixed;
+			top: 0;
+			width: 410px;
+			left: 0;
+			right: 0;
+			margin: auto;
+			padding: 0 20px;
+			z-index: 10;
+			color: #fff;
+			font-size: 10pt;
+			cursor: auto;
+			overflow: auto;
+			height: 720px;
+			z-index: 100;
+		}
+		
+		#scores a {
+			font-weight: bold;
+			text-decoration: none;
+			color: #fff;
+		}
+		
+		#scoreMenu a {
+			padding: 2px 5px;
+			margin: 0 1em;
+		}
+		
+		#scores a.active {
+			background-color: #fff;
+			color: #000;
+		}
+		
+		#scoresBack {
+			font-size: 140%;
+		}
+		
+		#scores a:hover {
+			color: #ff7e00
+		}
+		
+		#scoresTable {
+			/*margin: 3em 0 0 0;*/
+			width: 100%;
+		}
+		
+		#scoresTable tr:hover {
+			background-color: rgba(255,255,255,0.2);
+		}
+		
+		#scoresTable .head {
+			font-weight: bold;
+			color: #aab5b9;
+		}
+		
+		.score, .stage {
+			width: 60px;
+			text-align: right;
+		}
+		
+		.rank {
+			width: 20px;
+			text-align: right;
+		}
+		
+	</style>
+	<meta name="description" content="Star Blaster - Epic Space Shooter Game"/>
+	<!-- Direct Audio Fix: Simple HTML5 Audio solution -->
+	<script type="text/javascript" src="direct-audio-fix.js"></script>
+	<script type="text/javascript" src="xtype.js"></script>
+	<script type="text/javascript">
+		// Disable pause menu completely
+		(function() {
+			var checkInterval = setInterval(function() {
+				if (window.ig && window.ig.game && window.ig.game.toggleMenu) {
+					// Override toggleMenu to do nothing
+					window.ig.game.toggleMenu = function() {
+						console.log('Pause menu disabled');
+						// Do nothing - pause is disabled
+					};
+					console.log('✓ Pause menu functionality DISABLED');
+					clearInterval(checkInterval);
+				}
+			}, 100);
+		})();
+	</script>
+	<script type="text/javascript">
+		// Sound control system
+		var gameSoundMuted = false;
+		
+		function setupMuteButton() {
+			var muteButton = document.getElementById('muteButton');
+			if (!muteButton) return;
+			
+			// Force sound to 100% initially
+			if (window.ig && window.ig.soundManager) {
+				window.ig.soundManager.volume = 1.0;
+			}
+			if (window.ig && window.ig.music) {
+				window.ig.music.volume = 1.0;
+			}
+			
+			// Update button display
+			function updateButton() {
+				if (gameSoundMuted) {
+					muteButton.innerHTML = '🔇'; // Muted icon
+					muteButton.classList.add('muted');
+					muteButton.title = 'Unmute Sound';
+				} else {
+					muteButton.innerHTML = '🔊'; // Sound icon
+					muteButton.classList.remove('muted');
+					muteButton.title = 'Mute Sound';
+				}
+			}
+			
+			// Toggle mute function
+			function toggleMute(e) {
+				if (e) {
+					e.preventDefault();
+					e.stopPropagation();
+				}
+				
+				// Use direct audio fix toggle if available
+				if (window.toggleGameSound) {
+					gameSoundMuted = !window.toggleGameSound();
+				} else {
+					gameSoundMuted = !gameSoundMuted;
+				}
+				
+				updateButton();
+				console.log('Sound ' + (gameSoundMuted ? 'MUTED' : 'UNMUTED'));
+			}
+			
+			// Multiple event types for webview compatibility
+			muteButton.addEventListener('click', toggleMute, { passive: false });
+			muteButton.addEventListener('touchstart', toggleMute, { passive: false });
+			muteButton.addEventListener('touchend', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+			}, { passive: false });
+			
+			updateButton();
+			
+			console.log('Mute button initialized - Sound at 100%');
+		}
+		
+		// Show/hide mute button based on game state
+		function updateMuteButtonVisibility() {
+			var muteButton = document.getElementById('muteButton');
+			if (!muteButton) return;
+			
+			// XType.MODE.GAME = 1 (from xtype.js line 377)
+			if (window.ig && window.ig.game && window.ig.game.mode === 1) {
+				muteButton.style.display = 'block';
+			} else {
+				muteButton.style.display = 'none';
+			}
+		}
+		
+		// Override sound volume setters to always keep at 100%
+		function enforceSoundVolume() {
+			if (window.ig && window.ig.soundManager) {
+				if (window.ig.soundManager.volume !== 1.0) {
+					window.ig.soundManager.volume = 1.0;
+				}
+			}
+			if (window.ig && window.ig.music) {
+				if (window.ig.music.volume !== 1.0) {
+					window.ig.music.volume = 1.0;
+				}
+			}
+		}
+		
+		// NOTE: Mobile audio initialization is now handled by mobile-audio-fix.js
+		
+		// Hide the Sound Menu item from title screen
+		function hideSoundMenuItem() {
+			// Override the MenuItemSoundMenu to return empty text (hiding it)
+			if (window.MenuItemSoundMenu) {
+				window.MenuItemSoundMenu.inject({
+					getText: function() {
+						return ''; // Return empty string to hide the menu item
+					}
+				});
+				console.log('Sound Menu item hidden from title screen');
+			}
+		}
+		
+		// NOTE: Audio is handled by direct-audio-fix.js
+		// Use toggleGameSound() in console to toggle sound on/off
+		
+		// Initialize when page loads
+		window.addEventListener('load', function() {
+			// Hide sound menu from title screen
+			setTimeout(hideSoundMenuItem, 500);
+			setTimeout(hideSoundMenuItem, 1500);
+			
+			// NOTE: Audio initialization is handled by direct-audio-fix.js
+			// This only sets up the mute button UI
+			setTimeout(function() {
+				setupMuteButton();
+				
+				// Check button visibility and enforce volume periodically
+				setInterval(function() {
+					updateMuteButtonVisibility();
+					enforceSoundVolume(); // Keep enforcing 100% volume
+				}, 500);
+			}, 1000);
+		});
+	</script>
+<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-571256-18', 'auto');
+		ga('send', 'pageview');
+	</script>
+</head>
+<body>
+	<div id="loading">Loading...</div>
+	<button id="muteButton" title="Mute/Unmute Sound">🔊</button>
+	<canvas id="canvas">
+		<div id="nocanvas">
+			To play this game you need a good Browser, like
+			<a href="http://www.opera.com/">Opera</a>,
+			<a href="http://www.google.com/chrome">Chrome</a>,
+			<a href="http://www.mozilla.com/firefox/">Firefox</a> or
+			<a href="http://www.apple.com/safari/">Safari</a>.
+		</div>
+	</canvas>
+	<div id="making-of">Try it on your iOS or Android Device!</div>
+	<div id="scoreBox">
+		<form id="scoreForm">
+			<input type="text" id="scoreName" placeholder="Your Name"/>
+			<input type="submit" id="scoreButton" value="Submit Score"/>
+		</form>
+		<div id="scoreResponse"></div>
+		
+		<a href="http://twitter.com/share" onclick="return XType.tweetPopup();" id="tweetLink">
+			<img src="media/tweet-score.png" alt="Tweet Your Score" style="text-align: center"/>
+		</a>
+	</div>
+	<div id="scores">
+		<div style="padding:1em 0">
+			<a href="#" id="scoresBack">&laquo; Back to Title</a>
+		</div>
+		<div style="padding:1em 0" id="scoreMenu">
+			<a id="showScoresDesktop" href="#" class="active">Desktop</a>
+			<a id="showScoresMobile" href="#">Mobile</a>
+		</div>
+		<div id="scoresTable"></div>
+		<div id="scoreNotice"></div>
+	</div>
+	<img id="rotate" src="media/rotate.png" alt="Rotate"/>
+</body>
+</html>
