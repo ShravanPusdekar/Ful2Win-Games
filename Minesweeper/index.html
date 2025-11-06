@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Minesweeper</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<link rel="stylesheet" href="assets/css/stylesheet.css" media="all" />
+		<link href="https://fonts.googleapis.com/css?family=Baumans" rel="stylesheet" /> 
+	</head>
+	<body>
+		<!-- Game Stats -->
+		<div class="game-stats">
+			<div class="stat-item timer">
+				<span class="stat-label">TIME</span>
+				<span class="stat-value" id="timer">2:00</span>
+			</div>
+			<div class="stat-item score">
+				<span class="stat-label">SCORE</span>
+				<span class="stat-value" id="score">0</span>
+			</div>
+		</div>
+
+		<div id="mineSweeper">
+			<!-- Canvas will be rendered here -->
+			<button id="resetGame">Reset</button>
+		</div>
+
+		<script type="text/javascript" src="assets/js/Celula.js"></script>	
+		<script type="text/javascript" src="assets/js/Sprite.js"></script>	
+		<script type="text/javascript" src="assets/js/routines.js"></script>	
+	</body>
+</html>
