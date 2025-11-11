@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Sort Game</title>
+    <link href="node_modules/nouislider/dist/nouislider.css" rel="stylesheet">
+    <script src="node_modules/nouislider/dist/nouislider.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <script src='./js/script.js' defer></script>
+    <style>
+        /* Hide original header, nav, and footer */
+        header, nav, footer {
+            display: none !important;
+        }
+        
+        /* Game info bar */
+        .game-info {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .timer-display, .score-display {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .timer-display {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timer-display.warning {
+            background: rgba(255, 68, 68, 0.3);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .score-display {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timer-label, .score-label {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 600;
+        }
+        
+        /* Adjust main content position */
+        main {
+            margin-top: 70px !important;
+        }
+        
+        /* Game over blur overlay */
+        #game-over-blur {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 99999;
+            display: none;
+            pointer-events: none;
+        }
+        
+        #game-over-blur.active {
+            display: block;
+        }
+        
+        body.game-over .game-info {
+            opacity: 0 !important;
+            display: none !important;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .game-info {
+                height: 50px;
+                padding: 0 15px;
+            }
+            .timer-display, .score-display {
+                font-size: 20px;
+                padding: 6px 12px;
+            }
+            .timer-label, .score-label {
+                font-size: 12px;
+            }
+            main {
+                margin-top: 60px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Game Info Bar -->
+    <div class="game-info">
+        <div class="timer-display">
+            <span class="timer-label">TIME:</span>
+            <span id="timer-value">2:00</span>
+        </div>
+        <div class="score-display">
+            <span class="score-label">SCORE:</span>
+            <span id="score-value">0</span>
+        </div>
+    </div>
+    
+    <!-- Game Over Blur Overlay -->
+    <div id="game-over-blur"></div>
+   
+    <header style="display: none;">
+        <div class="header-container">
+            <h1>Ball Sort Game</h1>
+            <button class="toggle-style"><div class="icon ball-icon"></div><div class="txt">&#10140;</div><div class="icon liquid-icon"></div></button>
+        </div>
+    </header>
+    <nav style="display: none;">
+        <div class="nav-btns">
+            <button type="button" class="new"><div class="icon"></div><div class="txt">New</div></button>
+            <button type="button" class="restart"><div class="icon"></div><div class="txt">Restart</div></button>
+            <button type="button" class="undo"><div class="icon"></div><div class="txt">Undo</div></button>
+            <div class="flex-separator"></div>
+            <button type="button" class="addcontainer"><div class="icon"></div><div class="txt">Add Container</div></button>
+            <button type="button" class="solve" disabled><div class="icon"></div><div class="txt">Solve</div></button>
+            <button type="button" class="rules"><div class="icon"></div><div class="txt">Rules</div></button>
+            <button type="button" class="settings"><div class="icon"></div><div class="txt">Settings</div></button>
+        </div>
+    </nav>
+
+    <dialog class='rules'>
+        <div class='rules-div'>
+            <h2>Setup and goal</h2>
+
+            <p>
+                There are <span class="highlight">C</span> equal containers, 
+                each one capable of holding up to <span class="highlight">H</span> items (balls).
+            </p>
+            <p>
+                Such items can have <span class="highlight">N</span> different colors.
+                For each color, there are exactly <span class="highlight">H</span> items,
+                so in total there are <span class="highlight">N•H</span> items.
+            </p>
+            <p>
+                Initially, <span class="highlight">N</span> of such containers are filled with these items,randomly sorted, and the remaining <span class="highlight">K=C-N</span> containers are empty.
+            </p>
+            <p>
+                The goal is to move these items among the containers to sort them and have <span class="highlight">N</span> full containers, each one with <span class="highlight">H</span> items of the same color. 
+            </p>
+
+            <h2>Moving rules</h2>
+
+            <p>You can move the item on the top of container <span class="highlight">A</span> to container <span class="highlight">B</span> if either:</p>
+            <ul>
+                <li><span class="highlight">B</span> is empty, or</li>
+                <li>the top item in <span class="highlight">B</span> has the same color of the item to move.</li>
+            </ul>
+            
+            <p>As an additional rule, you can:</p>
+            <ul>
+                <li>move as many items of the same color as possible, from <span class="highlight">A</span> to <span class="highlight">B</span>, or</li>
+                <li>move only one item at a time, from <span class="highlight">A</span> to <span class="highlight">B</span>.</li>
+            </ul>
+
+            <p>Finally, you can optionally choose to initially hide the color of all the items except the top one in each containers.
+            <br>The color of such items is revealed as soon as they become the top items.</p>
+
+            <h2>Resources</h2>
+
+            <p>See <a href="http://kociemba.org/themen/waterball/colorsort.html">here</a> for more details on how to solve the game.</p>
+
+            <div class="dialog-buttons">
+                <button type="button" class="close">Close</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog class='settings'>
+        <div class='settings-div'>
+            <div class="sliders">
+                <div class="slider-container" id="set-N">
+                    <div class="slider"></div>
+                    <div class="label">Number of colors</div>
+                </div>
+                <div  class="slider-container" id="set-K">
+                    <div class="slider"></div>
+                    <div class="label">Number of empty containers</div>
+                </div>
+                <div  class="slider-container" id="set-H">
+                    <div class="slider"></div>
+                    <div class="label">Max number of items per container</div>
+                </div>
+            </div>
+            <div class="checkboxes">
+                <label>
+                    <input type="checkbox" id="set-moveAsManyItemsAsPossible" name="moveAsManyItemsAsPossible"/>
+                    <div class="checkbox-styled"></div>
+                    Move as many items as possible.
+                </label>
+                <label>
+                    <input type="checkbox" id="set-hideInitial" name="hideInitial"/>
+                    <div class="checkbox-styled"></div>
+                    Initially, show only the items at the top.
+                </label>
+            </div>
+            <div class="dialog-buttons">
+                <button type="button" class="cancel">Cancel</button>
+                <button type="button" class="save">Save</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="won-msg" class="gameOutcome">
+        YOU WON!
+    </dialog>
+    <dialog id="noMoreUsefulMoves-msg" class="gameOutcome">
+        NO MORE USEFUL MOVES...
+    </dialog>
+    <dialog id="noMoreMoves-msg" class="gameOutcome">
+        NO MORE MOVES...
+    </dialog>
+    <main>
+        <div class="game"></div>
+    </main>
+    
+    <footer style="display: none;">
+        <p>Created by F. Rosset <a href="https://github.com/frarosset"><i class="fab fa-github"></i></a></p>
+    </footer>
+    
+    <script>
+        // Game timer and score system
+        let gameScore = 0;
+        let gameTimer = 120; // 2 minutes in seconds
+        let timerInterval = null;
+        let startTime = null;
+        let gameActive = false;
+        
+        // Initialize timer display
+        function updateTimerDisplay() {
+            const timerValue = document.getElementById('timer-value');
+            const timerDisplay = document.querySelector('.timer-display');
+            
+            if (!timerValue) return;
+            
+            const minutes = Math.floor(gameTimer / 60);
+            const seconds = gameTimer % 60;
+            timerValue.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            
+            // Add warning class when under 30 seconds
+            if (gameTimer <= 30) {
+                timerDisplay.classList.add('warning');
+            } else {
+                timerDisplay.classList.remove('warning');
+            }
+        }
+        
+        // Update score display
+        function updateScoreDisplay() {
+            const scoreValue = document.getElementById('score-value');
+            if (scoreValue) {
+                scoreValue.textContent = gameScore;
+            }
+        }
+        
+        // Start the game timer
+        function startGameTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            gameActive = true;
+            startTime = Date.now();
+            
+            timerInterval = setInterval(() => {
+                if (!gameActive) return;
+                
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                gameTimer = Math.max(0, 120 - elapsed);
+                
+                updateTimerDisplay();
+                
+                if (gameTimer <= 0) {
+                    endGame();
+                }
+            }, 100);
+        }
+        
+        // End the game
+        function endGame() {
+            gameActive = false;
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            // Close any open game dialogs
+            try {
+                const dialogs = document.querySelectorAll('dialog[open]');
+                dialogs.forEach(dialog => dialog.close());
+            } catch(e) {}
+            
+            // Hide all UI elements
+            document.body.classList.add('game-over');
+            
+            // Show blur overlay
+            const blurOverlay = document.getElementById('game-over-blur');
+            if (blurOverlay) {
+                blurOverlay.classList.add('active');
+            }
+            
+            console.log('GAME OVER! Final Score: ' + gameScore);
+            
+            // Send message to parent window
+            window.parent.postMessage({ 
+                type: "GAME_OVER", 
+                score: gameScore 
+            }, "*");
+            
+            console.log('Game over message sent to parent: score=' + gameScore);
+        }
+        
+        // Increment score when a puzzle is solved
+        window.incrementGameScore = function() {
+            gameScore++;
+            updateScoreDisplay();
+            console.log('Score increased to: ' + gameScore);
+        };
+        
+        // Reset game (for new game button)
+        window.resetGameTimer = function() {
+            gameTimer = 120;
+            gameScore = 0;
+            gameActive = false;
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            // Remove game over state
+            document.body.classList.remove('game-over');
+            const blurOverlay = document.getElementById('game-over-blur');
+            if (blurOverlay) {
+                blurOverlay.classList.remove('active');
+            }
+            
+            updateTimerDisplay();
+            updateScoreDisplay();
+            
+            // Start timer after a short delay to let the game initialize
+            setTimeout(() => {
+                startGameTimer();
+            }, 500);
+        };
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTimerDisplay();
+            updateScoreDisplay();
+            
+            // Start timer when page loads
+            setTimeout(() => {
+                startGameTimer();
+            }, 1000);
+        });
+        
+        // Expose endGame function globally
+        window.endGameNow = endGame;
+    </script>
+</body>
+</html>
