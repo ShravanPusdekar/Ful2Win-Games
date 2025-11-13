@@ -1,0 +1,227 @@
+.timer {
+    position: relative;
+    background-color: #0984e3;
+    color: #fff;
+    height: 56px;
+    flex: 0 0 clamp(110px, 28%, 160px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .timer { height: 48px; font-size: 1.05rem; }
+}
+
+@media (max-width: 480px) {
+    .timer { height: 44px; }
+}
+
+.hud {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(88vw, 400px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 6;
+    pointer-events: none;
+}
+
+#blur-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: none;
+}
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+html, body {
+    height: 100%;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.carGame {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 100vw;
+    overflow-x: hidden;
+    background: url("./images/bg_image.png");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+
+.startScreen {
+    width: 50vw;
+    max-width: 92vw;
+    position: absolute;
+    background-color: #ee5253;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    z-index: 1;
+    text-align: center;
+    border: 1px solid #ff6b6b;
+    padding: 15px;
+    margin: auto;
+    cursor: pointer;
+    letter-spacing: 5;
+    word-spacing: 3;
+    line-height: 30px;
+    text-transform: uppercase;
+    box-shadow: 0px 5px 5px #777;
+}
+
+.score {
+    position: relative;
+    background-color: #2ecc71;
+    text-align: center;
+    color: white;
+    height: 56px;
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+}
+
+.hide {
+    display: none;
+}
+
+.car,
+.enemyCar {
+    width: 40px;
+    height: 70px;
+    background-image: url("./images/car4.png");
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    left: 50%;
+    bottom: 120px;
+}
+
+.gameArea {
+    width: min(88vw, 400px);
+    height: 100vh;
+    height: 100dvh;
+    margin: auto;
+    background-color: #2d3436;
+    position: relative;
+    overflow: hidden;
+    border-right: 7px dashed #c8d6e5;
+    border-left: 7px dashed #c8d6e5;
+}
+
+.line {
+    width: 12px;
+    height: 100px;
+    background: white;
+    position: absolute;
+    left: calc(50% - 12px);
+}
+
+.mobileControls {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    display: none;
+    justify-content: center;
+    gap: 28px;
+    z-index: 5;
+}
+
+.control-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 28px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.control-btn:active {
+    transform: scale(0.96);
+    background: rgba(255,255,255,0.2);
+}
+
+.carGame:not(.playing) .mobileControls { display: none !important; pointer-events: none; }
+.carGame.playing .mobileControls { pointer-events: auto; }
+
+@media (max-width: 768px) {
+    .startScreen { width: 80vw; line-height: 28px; }
+    .score { height: 48px; font-size: 1.05rem; }
+    .carGame.playing .mobileControls { display: flex; }
+}
+
+@media (max-width: 480px) {
+    .score { height: 44px; }
+}
+
+.joystick {
+    position: fixed;
+    left: 18px;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35) inset, 0 6px 18px rgba(0,0,0,0.25);
+    backdrop-filter: blur(6px);
+    opacity: 0.35;
+    touch-action: none;
+    z-index: 6;
+    display: none;
+}
+
+.stick {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    transform: translate(-50%, -50%);
+}
+
+.carGame:not(.playing) .joystick { display: none !important; }
+
