@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+     <meta charset="UTF-8"/>
+     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+     <link href="https://fonts.googleapis.com/css?family=Oswald:400,600,700" rel="stylesheet">
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+     <title>Rompe Ralph</title>
+
+     <link rel="icon" type="image/png" href="images/rompe-logo.png" />
+     <link rel="stylesheet" href="css/game.css">
+   </head>
+   <body>
+    <div class="container">
+      <div class="gameover">
+        <a href="index.html">
+          <img src="images/gameover.png">
+        </a>
+      </div>
+      <div class="youwin">
+        <a href="index.html">
+          <img src="images/youwin.png">
+        </a>
+      </div>
+
+      <div class="pointsCounter">
+        <span>Points Left: <span class="points"></span></span><br/>
+        <span>Seconds Left: <span class="seconds"></span></span>
+
+      </div>
+      <div class="gameboard">
+        <div class="ralphspace">
+
+          <div class="clearfix"></div>
+        </div>
+        <div class="top"></div>
+        <div class="building">
+          <div class="clearfix"></div>
+        </div>
+        <div class="fixerspace">
+          <div class="fixer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-controls" id="mobile-controls">
+      <div class="dpad">
+        <button class="ctrl btn-up" data-action="up" aria-label="Move up">▲</button>
+        <div class="row">
+          <button class="ctrl btn-left" data-action="left" aria-label="Move left">◀</button>
+          <button class="ctrl btn-down" data-action="down" aria-label="Move down">▼</button>
+          <button class="ctrl btn-right" data-action="right" aria-label="Move right">▶</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="ctrl btn-fix" data-action="fix" aria-label="Fix">Fix</button>
+        <button class="ctrl btn-pause" data-action="pause" aria-label="Pause">Pause</button>
+      </div>
+    </div>
+
+   <script src="js/ralph.js"></script>
+   <script src="js/fixer.js"></script>
+   <script src="js/building.js"></script>
+   <script src="js/game.js"></script>
+   <script>
+    // Debug helper
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        if(window.game){
+          console.log('Game loaded:', {
+            ralph: game.ralph.column,
+            felix: {row: game.fixer.row, col: game.fixer.column},
+            ralphBoxes: document.querySelectorAll('.ralphbox').length,
+            windows: document.querySelectorAll('.window').length,
+            fixerEl: document.querySelectorAll('.fixer').length
+          });
+        } else {
+          console.error('Game not initialized');
+        }
+      }, 500);
+    });
+   </script>
+  <script>
+    (function(){
+      function isPhone(){
+        var vw = Math.min(window.innerWidth || (screen && screen.width) || 0, document.documentElement.clientWidth || 0);
+        var coarse = false;
+        try{ coarse = window.matchMedia && window.matchMedia('(hover:none) and (pointer:coarse)').matches; }catch(e){}
+        var ua = navigator.userAgent || '';
+        var uaMobile = /Android|iPhone|iPod|Mobile/i.test(ua);
+        return uaMobile || (coarse && vw <= 900) || vw <= 500;
+      }
+      function show(){
+        var el = document.getElementById('mobile-controls');
+        if(el && isPhone()){
+          el.style.display = 'flex';
+        }
+      }
+      window.addEventListener('load', show, { once:true });
+    })();
+  </script>
+   <script>
+    (function(){
+      function bindControl(el, onPress){
+        if(!el) return;
+        let hold = null;
+        const start = (e)=>{ if(e && e.cancelable) e.preventDefault(); onPress(); if(hold===null) hold = setInterval(onPress, 200); };
+        const end = (e)=>{ if(e && e.cancelable) e.preventDefault(); if(hold!==null){ clearInterval(hold); hold = null; } };
+        if(window.PointerEvent){
+          el.addEventListener('pointerdown', start, {passive:false});
+          el.addEventListener('pointerup', end, {passive:false});
+          el.addEventListener('pointercancel', end, {passive:false});
+          el.addEventListener('pointerleave', end, {passive:false});
+        } else {
+          el.addEventListener('touchstart', start, {passive:false});
+          el.addEventListener('touchend', end, {passive:false});
+          el.addEventListener('touchcancel', end, {passive:false});
+        }
+      }
+      function call(fn){ try{ fn&&fn(); }catch(err){} }
+      function up(){ if(window.game){ call(()=>{ game.fixer.goUp(); game.printFixer(); game.fixer.walking_right(); }); } }
+      function down(){ if(window.game){ call(()=>{ game.fixer.goDown(); game.printFixer(); game.fixer.walking_right(); }); } }
+      function left(){ if(window.game){ call(()=>{ game.fixer.goLeft(); game.printFixer(); game.fixer.walking_left(); }); } }
+      function right(){ if(window.game){ call(()=>{ game.fixer.goRight(); game.printFixer(); game.fixer.walking_right(); }); } }
+      function fix(){ if(window.game){ call(()=>{ if(!game.fixer.onGround){ game.building.selectWindow(game.fixer.column, game.fixer.row).receiveHealth(); game.fixer.fixing(); } }); } }
+      function pause(){ if(window.game){ if(game.intervalTime && game.intervalBuilding && game.intervalRalph){ game.stop(); } else { game.startGame(); } } }
+      const map = { up, down, left, right, fix, pause };
+      ['up','down','left','right','fix','pause'].forEach((a)=>{
+        const el = document.querySelector(`[data-action="${a}"]`);
+        bindControl(el, map[a]);
+      });
+    })();
+  </script>
+  <script>
+    (function(){
+      function fit(){
+        var W = 1000, H = 670;
+        var vw = Math.min(window.innerWidth || 0, document.documentElement.clientWidth || 0);
+        var vh = Math.min(
+          window.innerHeight || 0,
+          (window.visualViewport && window.visualViewport.height) || window.innerHeight || 0
+        );
+        var s = Math.min(1, vw / W, vh / H);
+        var el = document.querySelector('.container');
+        if (el) {
+          el.style.transformOrigin = 'center';
+          el.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
+        }
+      }
+      window.addEventListener('resize', fit, { passive: true });
+      window.addEventListener('orientationchange', fit, { passive: true });
+      window.addEventListener('load', function(){ setTimeout(fit, 100); });
+      if(document.readyState === 'complete'){ fit(); } else { document.addEventListener('DOMContentLoaded', fit); }
+    })();
+  </script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/buzz/1.2.0/buzz.min.js"></script>
+
+   </body>
+ </html>

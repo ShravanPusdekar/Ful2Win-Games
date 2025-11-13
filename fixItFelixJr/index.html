@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+     <meta charset="UTF-8"/>
+     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+     <link href="https://fonts.googleapis.com/css?family=Oswald:400,600,700" rel="stylesheet">
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+     <title>Rompe Ralph</title>
+
+     <link rel="icon" type="image/png" href="images/rompe-logo.png" />
+     <link rel="stylesheet" href="css/game.css">
+     <script>
+       (function(){
+         try{
+           var coarse = false;
+           if(window.matchMedia){
+             coarse = window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+           }
+           var vw = Math.min(window.innerWidth || (screen && screen.width) || 0, document.documentElement.clientWidth || 0);
+           var ua = navigator.userAgent || '';
+           var uaMobile = /Android|iPhone|iPod|Mobile/i.test(ua);
+           var isPhone = (coarse && vw <= 820) || uaMobile;
+           if(isPhone){ window.location.replace('game.html'); }
+         }catch(e){}
+       })();
+     </script>
+   </head>
+   <body>
+    <div class="legend">
+      <h1>How to play to Ralph Wreck-it</h1>
+      <p>The main objective of this game is to preserve the building as well as you can fixing every damage that Ralph has made to it.</p>
+      <p>Game duration is 120 seconds and at the end of this time you should have at least 10 points left.</p>
+      <p>The game could ends before 120 seconds if the total points is equal to 0</p>
+      <p>Commands :</p>
+      <ul>
+        <li>move left -> a</li>
+        <li>move right -> d</li>
+        <li>move up -> w</li>
+        <li>move down -> s</li>
+        <li>fix the window -> f</li>
+        <li style="color:#C92935">pause -> p</li>
+
+
+      </ul>
+      <p style="color:#C92935">You cant fix windows which has both cristals broken, only when one of them is unbroken</p>
+    </div>
+    <a class="button" href="game.html">Start Game</a>
+
+   </body>
+
+ </html>
