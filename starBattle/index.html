@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Star Battle</title>
+</head>
+
+<body>
+    <!-- Game -->
+    <div id="app">
+        <div id="logo">
+            <img src="./img/logo-01.png" alt="logo">
+        </div>
+        <div id="container" class="absolute">
+            <div id="start" class="column">
+                <div id="auto-start-countdown">
+                    <span id="countdown-number">5</span>
+                </div>
+                <p class="message pre">
+                    1. Use W, A, S, D to control the spaceship, press Space to shoot.
+                    2. Fuel starts at 15, decreases by 1 per second. Game ends when fuel reaches 0.
+                    3. Touch falling fuel bottles to add 15 points, maximum is 30.
+                    4. Hit enemy spaceships for 5 points. Planets need 2 hits for 10 points. Hitting allies deducts 10 points.
+                    5. Colliding with enemies loses 15 fuel points. Colliding with allies deducts 10 points.
+                    6. Negative scores are allowed.
+                    7. Press M to mute/unmute sound.
+                    Start your space battle!
+                </p>
+                <button id="start-btn" class="btn">
+                    <p>Start Game</p>
+                    <p>Loading...</p>
+                </button>
+            </div>
+            <div id="play" class="absolute">
+                <canvas id="canvas" class="absolute"></canvas>
+                <div class="content absolute">
+                    <div class="header">
+                        <ul class="info">
+                            <li>
+                                <img src="./img/time3.png" alt="time">
+                                <span id="time">2:00</span>
+                            </li>
+                            <li>
+                                <img src="./img/fuel2.png" alt="fuel">
+                                <span id="fuel">00</span>
+                            </li>
+                            <li>
+                                <img src="./img/score.png" alt="score">
+                                <span id="score">00</span>
+                            </li>
+                            <li>
+                                <img src="./img/playerBullet.png" alt="score">
+                                <span id="shoot">00</span>
+                            </li>
+
+                        </ul>
+                        <ul class="option">
+                            <li id="game-mute-btn">
+                                <img class="pause" src="./img/mute.png" alt="time">
+                                <img class="pause" src="./img/speaker.png" alt="time">
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Mobile Touch Controls -->
+                    <div id="mobile-controls" class="mobile-controls">
+                        <div class="dpad">
+                            <button id="btn-up" class="control-btn btn-up">↑</button>
+                            <button id="btn-left" class="control-btn btn-left">←</button>
+                            <button id="btn-right" class="control-btn btn-right">→</button>
+                            <button id="btn-down" class="control-btn btn-down">↓</button>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="btn-shoot" class="control-btn btn-shoot">FIRE</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="over" class="column absolute">
+                <h1 class="game-over-title">GAME OVER</h1>
+                <div class="game-data">
+                    <p class="message">
+                        <span>
+                            <img src="./img/time3.png" alt="time">
+                        </span>
+                        <span>
+                            --
+                        </span>
+                        <span class="time">2:00</span>
+                    </p>
+                    <p class="message">
+                        <span>
+                            <img src="./img/score.png" alt="score">
+                        </span>
+                        <span>
+                            --
+                        </span>
+                        <span class="score">00</span>
+                    </p>
+                    <p class="message">
+                        <span>
+                            <img src="./img/playerBullet.png" alt="score">
+                        </span>
+                        <span>
+                            --
+                        </span>
+                        <span class="shoot">00</span>
+                    </p>
+                </div>
+            </div>
+            <div id="rank" class="column absolute">
+                <table class="scroll">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Score</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+                <button id="restart-btn" class="btn">
+                    Back to Start
+                </button>
+            </div>
+        </div>
+        <footer>
+            <span>Crafted with by
+                <a href="http://4ark.me"> @4Ark</a>/<a href="https://github.com/gd4Ark/star-battle">GitHub</a>
+            </span>
+        </footer>
+    </div>
+    <script src="js/config/config.js"></script>
+    <script src="js/utils/utils.js"></script>
+    <script src="js/utils/res.js"></script>
+    <script src="js/class/scene.js"></script>
+    <script src="js/class/cooldown.js"></script>
+    <script src="js/class/element.js"></script>
+    <script src="js/class/animation.js"></script>
+    <script src="js/class/plane.js"></script>
+    <script src="js/class/bullet.js"></script>
+    <script src="js/class/player.js"></script>
+    <script src="js/class/enemy.js"></script>
+    <script src="js/class/meteorite.js"></script>
+    <script src="js/class/friend.js"></script>
+    <script src="js/class/star.js"></script>
+    <script src="js/class/fuel.js"></script>
+    <script src="js/scenes/start.js"></script>
+    <script src="js/scenes/play.js"></script>
+    <script src="js/scenes/over.js"></script>
+    <script src="js/scenes/rank.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
