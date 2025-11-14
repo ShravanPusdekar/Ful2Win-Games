@@ -859,6 +859,7 @@ function initSettings(){
 }
 
 function initSettingsDialog(){
+    const sliderLibAvailable = (typeof window !== 'undefined' && typeof window.noUiSlider !== 'undefined');
     for (let param in settingsInfo){
         switch (settingsInfo[param].type){
             case 'slider':
@@ -866,28 +867,39 @@ function initSettingsDialog(){
                 let sliderDiv = document.createElement('div');
                 slider.appendChild(sliderDiv);
 
-                noUiSlider.create(sliderDiv, {
-                    start: [settingsInfo[param].default],
-                    connect: [true, false],
-                    behaviour: 'smooth-steps-tap',
-                    range: {
-                        'min': settingsInfo[param].min,
-                        'max': settingsInfo[param].max
-                    },
-                    format: {
-                        // 'to' the formatted value. Receives a number.
-                        to: function (value) {
-                            return Math.round(value);
+                if (sliderLibAvailable) {
+                    noUiSlider.create(sliderDiv, {
+                        start: [settingsInfo[param].default],
+                        connect: [true, false],
+                        behaviour: 'smooth-steps-tap',
+                        range: {
+                            'min': settingsInfo[param].min,
+                            'max': settingsInfo[param].max
                         },
-                        // 'from' the formatted value.
-                        // Receives a string, should return a number.
-                        from: function (value) {
-                            return value;
-                        }
-                    },
-                    tooltips: true,
-                    step: 1
-                });
+                        format: {
+                            // 'to' the formatted value. Receives a number.
+                            to: function (value) {
+                                return Math.round(value);
+                            },
+                            // 'from' the formatted value.
+                            // Receives a string, should return a number.
+                            from: function (value) {
+                                return value;
+                            }
+                        },
+                        tooltips: true,
+                        step: 1
+                    });
+                } else {
+                    // Fallback: leave a simple text showing the default value
+                    const fallback = document.createElement('div');
+                    fallback.textContent = String(settingsInfo[param].default);
+                    fallback.style.padding = '6px 8px';
+                    fallback.style.border = '1px solid #ddd';
+                    fallback.style.borderRadius = '8px';
+                    fallback.style.textAlign = 'center';
+                    slider.appendChild(fallback);
+                }
                 // /* Just for testing: parameters are not set this way */
                 // sliderDiv.noUiSlider.on('change', function (values, handle) {
                 //     switch(param){
@@ -915,9 +927,12 @@ function initSettingsDialog(){
 }
 
 function settingsDialogCancelBtn_callback(){
-    document.querySelector(`.slider-container#set-N .slider > div`).noUiSlider.set(N);
-    document.querySelector(`.slider-container#set-K .slider > div`).noUiSlider.set(K);
-    document.querySelector(`.slider-container#set-H .slider > div`).noUiSlider.set(H);
+    const nEl = document.querySelector(`.slider-container#set-N .slider > div`);
+    if (nEl && nEl.noUiSlider) nEl.noUiSlider.set(N);
+    const kEl = document.querySelector(`.slider-container#set-K .slider > div`);
+    if (kEl && kEl.noUiSlider) kEl.noUiSlider.set(K);
+    const hEl = document.querySelector(`.slider-container#set-H .slider > div`);
+    if (hEl && hEl.noUiSlider) hEl.noUiSlider.set(H);
     document.querySelector(`.checkboxes input#set-moveAsManyItemsAsPossible`).checked = moveAsManyItemsAsPossible;
     document.querySelector(`.checkboxes input#set-hideInitial`).checked = hideInitial;
 
@@ -928,9 +943,12 @@ function settingsDialogCancelBtn_callback(){
 function settingsDialogSaveBtn_callback(){
     closeGameOutcome();
 
-    N = document.querySelector(`.slider-container#set-N .slider > div`).noUiSlider.get();
-    K = document.querySelector(`.slider-container#set-K .slider > div`).noUiSlider.get();
-    H = document.querySelector(`.slider-container#set-H .slider > div`).noUiSlider.get();
+    const nEl = document.querySelector(`.slider-container#set-N .slider > div`);
+    if (nEl && nEl.noUiSlider) N = nEl.noUiSlider.get();
+    const kEl = document.querySelector(`.slider-container#set-K .slider > div`);
+    if (kEl && kEl.noUiSlider) K = kEl.noUiSlider.get();
+    const hEl = document.querySelector(`.slider-container#set-H .slider > div`);
+    if (hEl && hEl.noUiSlider) H = hEl.noUiSlider.get();
     C = N + K;
     moveAsManyItemsAsPossible = document.querySelector(`.checkboxes input#set-moveAsManyItemsAsPossible`).checked;
     hideInitial = document.querySelector(`.checkboxes input#set-hideInitial`).checked;
