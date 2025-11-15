@@ -568,6 +568,14 @@ footer a{
         width: 110px;
         height: 110px;
     }
+    .joystick {
+        width: 110px;
+        height: 110px;
+    }
+    .joystick-knob {
+        width: 48px;
+        height: 48px;
+    }
 
     .control-btn {
         width: 38px;
@@ -600,7 +608,7 @@ footer a{
     margin-top: auto;
 }
 
-.mobile-controls .dpad,
+.mobile-controls .joystick,
 .mobile-controls .action-buttons {
     pointer-events: auto;
 }
@@ -609,6 +617,33 @@ footer a{
     position: relative;
     width: 140px;
     height: 140px;
+}
+
+.joystick {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(80, 140, 255, 0.25), rgba(0, 0, 0, 0.4));
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35), inset 0 4px 12px rgba(255,255,255,0.08);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    -ms-touch-action: none;
+}
+
+.joystick-knob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(180, 200, 255, 0.6), rgba(70, 120, 240, 0.9));
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45), inset 0 3px 8px rgba(255,255,255,0.25);
 }
 
 .control-btn {

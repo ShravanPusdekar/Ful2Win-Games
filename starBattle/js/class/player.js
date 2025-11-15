@@ -106,14 +106,82 @@ class Player extends Plane{
             button.addEventListener('mouseleave', endAction, { passive: false });
         };
 
-        setupButton('btn-up', this.up);
-        setupButton('btn-down', this.down);
-        setupButton('btn-left', this.left);
-        setupButton('btn-right', this.right);
         setupButton('btn-shoot', 'shoot');
+        this.initJoystick();
         
         // Process active movements in the game loop
         this.processContinuousMovement();
+    }
+
+    initJoystick() {
+        const base = document.getElementById('joystick');
+        const knob = document.getElementById('joystick-knob');
+        if (!base || !knob) return;
+
+        this.joystickVector = { x: 0, y: 0 };
+        let active = false;
+        let pid = null;
+
+        const maxDist = () => Math.max(1, (base.clientWidth / 2) - (knob.clientWidth / 2));
+
+        const setKnob = (nx, ny) => {
+            const md = maxDist();
+            knob.style.transform = `translate(-50%, -50%) translate(${nx * md}px, ${ny * md}px)`;
+        };
+
+        const updateFromClient = (cx, cy) => {
+            const r = base.getBoundingClientRect();
+            const centerX = r.left + r.width / 2;
+            const centerY = r.top + r.height / 2;
+            let dx = cx - centerX;
+            let dy = cy - centerY;
+            const md = maxDist();
+            const dist = Math.hypot(dx, dy) || 1;
+            if (dist > md) {
+                dx = dx / dist * md;
+                dy = dy / dist * md;
+            }
+            const nx = dx / md;
+            const ny = dy / md;
+            this.joystickVector = { x: Math.max(-1, Math.min(1, nx)), y: Math.max(-1, Math.min(1, ny)) };
+            setKnob(this.joystickVector.x, this.joystickVector.y);
+        };
+
+        const start = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            active = true;
+            pid = e.pointerId || 'touch';
+            if (e.pointerId && base.setPointerCapture) base.setPointerCapture(e.pointerId);
+            const p = e.touches ? e.touches[0] : e;
+            updateFromClient(p.clientX, p.clientY);
+        };
+
+        const move = (e) => {
+            if (!active) return;
+            const p = e.touches ? e.touches[0] : e;
+            updateFromClient(p.clientX, p.clientY);
+        };
+
+        const end = (e) => {
+            active = false;
+            pid = null;
+            this.joystickVector = { x: 0, y: 0 };
+            setKnob(0, 0);
+            if (e && e.pointerId && base.releasePointerCapture) base.releasePointerCapture(e.pointerId);
+        };
+
+        base.addEventListener('pointerdown', start, { passive: false });
+        base.addEventListener('pointermove', move, { passive: false });
+        base.addEventListener('pointerup', end, { passive: false });
+        base.addEventListener('pointercancel', end, { passive: false });
+        base.addEventListener('touchstart', start, { passive: false });
+        base.addEventListener('touchmove', move, { passive: false });
+        base.addEventListener('touchend', end, { passive: false });
+        base.addEventListener('touchcancel', end, { passive: false });
+        base.addEventListener('mousedown', start, { passive: false });
+        document.addEventListener('mousemove', move, { passive: false });
+        document.addEventListener('mouseup', end, { passive: false });
     }
 
     processContinuousMovement() {
@@ -123,6 +191,13 @@ class Player extends Plane{
                 return;
             }
             
+            const v = this.joystickVector || { x: 0, y: 0 };
+            const dz = 0.2;
+            if (v.y < -dz) this.up();
+            if (v.y > dz) this.down();
+            if (v.x < -dz) this.left();
+            if (v.x > dz) this.right();
+
             // Execute all active movements
             this.activeMovements.forEach(action => {
                 action.call(this);
