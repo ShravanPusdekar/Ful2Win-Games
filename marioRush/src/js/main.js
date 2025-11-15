@@ -29,10 +29,18 @@ function formatTime(secs) {
 
 function setPipeSpeedStage(stage) {
   // Faster overall speed and bigger step per 30s
-  const baseOffset = 0.8 // immediate speed-up from base
-  const perStageDelta = 0.7 // additional speed-up each 30s
-  const newDuration = Math.max(0.5, basePipeDurationSec - baseOffset - (stage * perStageDelta))
-  pipe.style.animationDuration = `${newDuration}s`
+  if (isMobile) {
+    const mobileBaseMultiplier = 1.6
+    const mobilePerStageDelta = 0.25
+    const mobileMin = 2.0
+    const duration = Math.max(mobileMin, (basePipeDurationSec * mobileBaseMultiplier) - (stage * mobilePerStageDelta))
+    pipe.style.animationDuration = `${duration}s`
+  } else {
+    const baseOffset = 0.8 // immediate speed-up from base
+    const perStageDelta = 0.7 // additional speed-up each 30s
+    const duration = Math.max(0.5, basePipeDurationSec - baseOffset - (stage * perStageDelta))
+    pipe.style.animationDuration = `${duration}s`
+  }
 }
 
 function updateSpeedStage() {
@@ -96,6 +104,7 @@ const getMarioWidth = () => {
 // Score tracking
 let score = 0
 let pipeHasPassed = false
+let jumpedOverCurrentPipe = false
 let onPipe = false
 let lastMarioBottom = 0
 
@@ -187,6 +196,10 @@ const loop = () => {
     if (isColliding) {
       const pipeTop = pipeHeight
       
+      if (marioPosition >= pipeTop - 1) {
+        jumpedOverCurrentPipe = true
+      }
+      
       // Only land when Mario actually crosses the pipe top this frame
       const isDescending = verticalSpeed < -0.75
       const crossedTopThisFrame = (lastMarioBottom > pipeTop) && (marioPosition <= pipeTop + 1)
@@ -244,12 +257,15 @@ const loop = () => {
     // Score increment when pipe passes Mario
     if (pipeRect.right < marioRect.left && !pipeHasPassed) {
       pipeHasPassed = true
-      updateScore()
+      if (jumpedOverCurrentPipe) {
+        updateScore()
+      }
     }
     
     // Reset score flag and apply any pending speed stage when pipe loops off-screen
     if (pipeRect.right <= boardRect.left + 1) {
       pipeHasPassed = false
+      jumpedOverCurrentPipe = false
       if (pendingSpeedStage !== -1) {
         setPipeSpeedStage(pendingSpeedStage)
         currentSpeedStage = pendingSpeedStage
