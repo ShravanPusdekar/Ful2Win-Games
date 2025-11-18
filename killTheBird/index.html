@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kill the Birds - Pure CSS Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrapper">
+    <div class="timer">
+      <span></span>
+    </div>
+    <div class="gameover">GAME OVER</div>
+    <h1>KILL THE BIRDS <span>(shoot the birds)</span></h1>
+
+    <div class="birds-layer">
+      <div class="pajaro pajaro1"><span></span></div>
+      <div class="pajaro pajaro2"><span></span></div>
+      <div class="pajaro pajaro3"><span></span></div>
+      <div class="pajaro pajaro4"><span></span></div>
+      <div class="pajaro pajaro5"><span></span></div>
+      <div class="pajaro pajaro6"><span></span></div>
+    </div>
+
+    <div class="score-panel">
+      <div class="birds-killed">BIRDS KILLED: <span id="birdsKilled">0</span></div>
+      <div class="score">SCORE: <span id="score">0</span></div>
+    </div>
+    <div class="gun">
+      <div class="gun-barrel"></div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
