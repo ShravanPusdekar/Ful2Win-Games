@@ -1,0 +1,76 @@
+html {
+    overflow: hidden;
+    height: 100%;
+    background: #191919;
+    width: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+#hud {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    font-family: Arial, sans-serif;
+}
+
+#timer {
+    padding: 6px 16px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    background: rgba(0,0,0,0.6);
+    border-radius: 999px;
+}
+
+#canvas {
+    background: url('https://marclopezavila.github.io/planet-defense-game/img/space.jpg') no-repeat;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    background-size: cover;
+}
+
+#canvas.playing {
+    cursor: url('https://marclopezavila.github.io/planet-defense-game/img/aim_red.png') 17.5 17.5,auto !important;
+}
+
+/* touch controls */
+#controls {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 20px;
+    display: flex;
+    justify-content: center;
+    pointer-events: none; /* let canvas still receive events except on button */
+}
+
+#shootBtn {
+    pointer-events: auto;
+    padding: 12px 28px;
+    font-size: 18px;
+    font-family: Arial, sans-serif;
+    border-radius: 999px;
+    border: none;
+    background: #e53935;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+#shootBtn:active {
+    transform: scale(0.95);
+}
+
+@media (max-width: 600px) {
+    #shootBtn {
+        padding: 14px 36px;
+        font-size: 20px;
+    }
+}
