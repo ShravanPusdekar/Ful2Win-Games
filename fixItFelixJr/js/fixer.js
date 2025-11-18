@@ -55,4 +55,10 @@ function Fixer(){
       $f.removeClass('walking_right fixing nofixing').addClass('walking_left');
   };
 
+  this.hit = function(){
+      var $f = $('.fixer');
+      $f.addClass('hit');
+      setTimeout(function(){ $f.removeClass('hit'); }, 320);
+  };
+
 }

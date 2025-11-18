@@ -14,9 +14,7 @@
 	margin: 0;
 	padding: 0;
 }
-html {
-	cursor: url("../img/alcool-01.png") 30 30, auto;
-}
+/* Bottle cursor globally disabled */
 body {
 	align-items: center;
 	background: linear-gradient(180deg, #167a5d, #009688, #167a5d);
@@ -89,11 +87,7 @@ option {
 	animation: aparece .5s;
 	z-index: 10;
 }
-.tamanho-1:hover,
-.tamanho-2:hover,
-.tamanho-3:hover {
-	cursor: url("../img/alcool-02.png") 30 30, auto;
-}
+/* Hover cursor override removed */
 .tamanho-1 {	
 	width: 50px;
 	height: 50px;
@@ -204,4 +198,93 @@ option {
 	#countdown-number {
 		font-size: 2rem;
 	}
+}
+
+body.game-mode {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Disable CSS cursor images during gameplay so clicks don't appear to move a bottle */
+body.game-mode, body.game-mode * {
+    cursor: auto !important;
+}
+body.game-mode .tamanho-1:hover,
+body.game-mode .tamanho-2:hover,
+body.game-mode .tamanho-3:hover {
+    cursor: auto !important;
+}
+
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.loader-spinner {
+    width: 56px;
+    height: 56px;
+    border: 6px solid rgba(255,255,255,0.25);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: loader-spin 1s linear infinite;
+}
+
+#loader-text {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+@keyframes loader-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#touch-cursor {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    background-image: url("../img/alcool-01.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    pointer-events: none;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    will-change: transform;
+    z-index: 9998;
+    transform: translate(-9999px, -9999px);
+    opacity: 0;
+    transition: opacity .1s linear;
+}
+
+#touch-cursor.touch-cursor-active {
+    opacity: 1;
+}
+
+#touch-cursor.pressing {
+    background-image: url("../img/alcool-02.png");
+}
+
+@media (pointer: coarse) {
+    html { cursor: auto; }
 }

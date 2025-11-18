@@ -26,7 +26,8 @@
 
       <div class="pointsCounter">
         <span>Points Left: <span class="points"></span></span><br/>
-        <span>Seconds Left: <span class="seconds"></span></span>
+        <span>Seconds Left: <span class="seconds"></span></span><br/>
+        <span>Lives Left: <span class="lives"></span></span>
 
       </div>
       <div class="gameboard">
@@ -55,7 +56,6 @@
       </div>
       <div class="actions">
         <button class="ctrl btn-fix" data-action="fix" aria-label="Fix">Fix</button>
-        <button class="ctrl btn-pause" data-action="pause" aria-label="Pause">Pause</button>
       </div>
     </div>
 
@@ -105,7 +105,12 @@
       function bindControl(el, onPress){
         if(!el) return;
         let hold = null;
-        const start = (e)=>{ if(e && e.cancelable) e.preventDefault(); onPress(); if(hold===null) hold = setInterval(onPress, 200); };
+        const isFix = el.getAttribute('data-action') === 'fix';
+        const start = (e)=>{
+          if(e && e.cancelable) e.preventDefault();
+          onPress();
+          if(!isFix && hold===null) hold = setInterval(onPress, 200);
+        };
         const end = (e)=>{ if(e && e.cancelable) e.preventDefault(); if(hold!==null){ clearInterval(hold); hold = null; } };
         if(window.PointerEvent){
           el.addEventListener('pointerdown', start, {passive:false});
@@ -123,10 +128,9 @@
       function down(){ if(window.game){ call(()=>{ game.fixer.goDown(); game.printFixer(); game.fixer.walking_right(); }); } }
       function left(){ if(window.game){ call(()=>{ game.fixer.goLeft(); game.printFixer(); game.fixer.walking_left(); }); } }
       function right(){ if(window.game){ call(()=>{ game.fixer.goRight(); game.printFixer(); game.fixer.walking_right(); }); } }
-      function fix(){ if(window.game){ call(()=>{ if(!game.fixer.onGround){ game.building.selectWindow(game.fixer.column, game.fixer.row).receiveHealth(); game.fixer.fixing(); } }); } }
-      function pause(){ if(window.game){ if(game.intervalTime && game.intervalBuilding && game.intervalRalph){ game.stop(); } else { game.startGame(); } } }
-      const map = { up, down, left, right, fix, pause };
-      ['up','down','left','right','fix','pause'].forEach((a)=>{
+      function fix(){ if(window.game){ call(()=>{ if(!game.fixer.onGround){ game.performFix(); } }); } }
+      const map = { up, down, left, right, fix };
+      ['up','down','left','right','fix'].forEach((a)=>{
         const el = document.querySelector(`[data-action="${a}"]`);
         bindControl(el, map[a]);
       });

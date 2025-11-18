@@ -1,18 +1,21 @@
 function Game(options){
   this.points = 0;
+  this.score = 0;
   this.timeLeft = 120;
 
   this.ralph = options.ralph;
   this.building = options.building;
   this.fixer = options.fixer;
 
-  this.timeByMove = 700;
+  this.timeByMove = 1200;
+  this.lastFixAt = 0;
 
 
 
   this.loadGame = function(){
     this.building.createBuilding();
     this.printBuilding();
+    this.printLives();
     this.assignControlsToKeys();
 
     this.createRalphSpace();
@@ -28,6 +31,7 @@ function Game(options){
   this.updateBuilding = function(){
       this.printBuilding();
       this.printPoints();
+      this.printLives();
   };
 
 
@@ -37,11 +41,14 @@ function Game(options){
       this.printRalphWrecking();
       var targetWindow = this.building.selectWindow(this.ralph.column);
       var self = this;
-      this.spawnBrick(this.ralph.column, function(){
+      this.spawnBrick(this.ralph.column, targetWindow ? targetWindow.row : undefined, function(){
         if(targetWindow && targetWindow.health){
+          var before = targetWindow.health;
           targetWindow.receiveDamage();
+          return (before > 0 && targetWindow.health === 0);
         }else{
           self.updateRalph();
+          return false;
         }
       });
     }
@@ -53,8 +60,9 @@ function Game(options){
 
   };
 
-  this.spawnBrick = function(column, onHit){
+  this.spawnBrick = function(column, row, onHit){
     try{
+      var self = this;
       var container = document.querySelector('.container');
       var board = document.querySelector('.gameboard');
       if(!container || !board){ if(onHit) onHit(); return; }
@@ -65,7 +73,12 @@ function Game(options){
       var boardLeft = (container.clientWidth - board.offsetWidth) / 2;
       var colW = board.offsetWidth / 5;
       var left = Math.round(boardLeft + column * colW + (colW/2) - (bw/2));
-      var endTop = startTop + topH + buildingH - 10;
+      var buildingTop = startTop + topH;
+      var endTop = buildingTop + buildingH - 10;
+      var rH = buildingH / 4;
+      var impactTop = (typeof row === 'number')
+        ? Math.round(buildingTop + row * rH + (rH/2) - (bh/2))
+        : endTop;
 
       var brick = document.createElement('div');
       brick.className = 'brick';
@@ -80,15 +93,45 @@ function Game(options){
       brick.style.zIndex = '9999';
       container.appendChild(brick);
 
-      var duration = 500;
+      var duration1 = 500;
       var t0 = Date.now();
       var timer = setInterval(function(){
-        var t = (Date.now() - t0) / duration; if(t >= 1) t = 1;
-        brick.style.top = (startTop + (endTop - startTop) * t) + 'px';
+        var t = (Date.now() - t0) / duration1; if(t >= 1) t = 1;
+        brick.style.top = (startTop + (impactTop - startTop) * t) + 'px';
         if(t === 1){
           clearInterval(timer);
-          brick.remove();
-          if(typeof onHit === 'function') onHit();
+          var felixHit = (typeof row === 'number' && self && self.fixer && self.fixer.onGround === false && self.fixer.column === column && self.fixer.row === row);
+          if(felixHit){
+            if(self.fixer && typeof self.fixer.hit === 'function'){ self.fixer.hit(); }
+            setTimeout(function(){
+              if(typeof self.fixer.life === 'number' && self.fixer.life > 0){
+                self.fixer.life--;
+                if(typeof self.printLives === 'function'){ self.printLives(); }
+                if(self.fixer.life <= 0){
+                  if(typeof self.stop === 'function') self.stop();
+                  try{ window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*"); }catch(e){}
+                  var go = document.querySelector('.gameover');
+                  if(go){ go.style.display = 'block'; }
+                }
+              }
+            }, 320);
+          }
+          var broke = false;
+          try{ broke = typeof onHit === 'function' ? !!onHit() : false; }catch(e){ broke = false; }
+          if(broke || felixHit || impactTop === endTop){
+            brick.remove();
+          } else {
+            var t1 = Date.now();
+            var duration2 = 350;
+            var timer2 = setInterval(function(){
+              var tt = (Date.now() - t1) / duration2; if(tt >= 1) tt = 1;
+              brick.style.top = (impactTop + (endTop - impactTop) * tt) + 'px';
+              if(tt === 1){
+                clearInterval(timer2);
+                brick.remove();
+              }
+            }, 16);
+          }
         }
       }, 16);
     }catch(e){ if(typeof onHit === 'function') onHit(); }
@@ -97,12 +140,16 @@ function Game(options){
 /*================ Funciones de puntuación =================*/
 
 this.assignPoints = function(){
-  this.points = (this.building.calculatePoints()-15)*100;
+  
 };
 
 this.printPoints = function(){
-  this.assignPoints();
+  this.score = this.points;
   $('.points').html(this.points);
+};
+
+this.printLives = function(){
+  $('.lives').html(this.fixer.life);
 };
 
 
@@ -175,6 +222,22 @@ this.printTime = function(){
     }
   };
 
+  this.performFix = function(){
+    if(this.fixer.onGround){ return; }
+    var now = Date.now();
+    if(now - this.lastFixAt < 220){ return; }
+    var target = this.building.selectWindow(this.fixer.column, this.fixer.row);
+    if(!target){ return; }
+    var before = target.health;
+    target.receiveHealth();
+    this.fixer.fixing();
+    this.lastFixAt = now;
+    if(target.health !== before){
+      this.points += 100;
+      this.updateBuilding();
+    }
+  };
+
 
   this.assignControlsToKeys = function(){
     $('body').on('keydown', function(e) {
@@ -204,17 +267,9 @@ this.printTime = function(){
           break;
 
         case 70:
-          this.building.selectWindow(this.fixer.column, this.fixer.row).receiveHealth();
-          this.fixer.fixing();
-         break;
-
-       case 80:
-       if(this.intervalTime && this.intervalBuilding && this.intervalRalph){
-         this.stop();
-       }else{
-         this.startGame();
-       }
-        break;
+          if(e.repeat){ break; }
+          this.performFix();
+          break;
 
       }
     }.bind(this));
@@ -255,13 +310,15 @@ this.printTime = function(){
   this.startGame = function(){
     this.intervalTime = setInterval(function(){
       var self = this;
-      if(self.timeLeft > 0 && this.points > 0){
+      if(self.timeLeft > 0 && self.fixer.life > 0){
         self.printTime();
       }else{
         self.stop();
-        if(this.points <= 0){
+        if(self.fixer.life <= 0){
+          try{ window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*"); }catch(e){}
           $('.gameover').css("display", "block");
         }else{
+          try{ window.parent.postMessage({ type: "GAME_OVER", score: game.score }, "*"); }catch(e){}
           $('.youwin').css("display", "block");
         }
       }

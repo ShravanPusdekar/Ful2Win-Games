@@ -64,13 +64,13 @@ a.button:hover{
   z-index:100;
   top:10px;
   left:10px;
-  height:40px;
+  height:auto;
   width:auto;
   text-align:left;
   color:#fff;
   font-family:'Oswald', sans-serif;
   font-weight:600;
-  font-size:clamp(13px,2.8vw,18px);
+  font-size:clamp(18px,3.2vw,26px);
 }
 
 .gameboard{
@@ -223,6 +223,29 @@ a.button:hover{
   height:80px;
   background:url('../images/felix_walking_left.png') bottom center no-repeat;
   background-size:100%;
+}
+
+/* Felix hit animation */
+.fixer.hit,
+.fixing.hit,
+.walking_right.hit,
+.walking_left.hit{
+  animation: hitShake 0.32s ease, hitFlash 0.32s ease;
+}
+
+@keyframes hitShake{
+  0%{   margin-left:0; }
+  20%{  margin-left:-4px; }
+  40%{  margin-left:4px; }
+  60%{  margin-left:-3px; }
+  80%{  margin-left:3px; }
+  100%{ margin-left:0; }
+}
+
+@keyframes hitFlash{
+  0%{   opacity:1; }
+  30%{  opacity:0.65; }
+  100%{ opacity:1; }
 }
 /* ------- zona de edificio ---------*/
 

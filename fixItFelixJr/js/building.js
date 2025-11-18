@@ -62,7 +62,7 @@ function Window(row, column){
   };
 
   this.receiveHealth = function(){
-    if(this.health == 1){
+    if(this.health < 2){
       this.health++;
     }
   };
