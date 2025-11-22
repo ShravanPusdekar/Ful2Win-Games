@@ -101,7 +101,14 @@ Marble.PageGameLife.prototype._init	= function(){
 	//scene.add(mesh);
 	
 	// for debug - display xyz axes on the screen
-	scene.add(new THREE.Axes());
+	// Add axis helper if available (support multiple three.js versions)
+	var axesHelper = null;
+	if (THREE.AxesHelper) {
+		axesHelper = new THREE.AxesHelper(100);
+	} else if (THREE.AxisHelper) {
+		axesHelper = new THREE.AxisHelper(100);
+	}
+	if (axesHelper) scene.add(axesHelper);
 
 	gameLevel	= new Marble.GameLevel();
 
