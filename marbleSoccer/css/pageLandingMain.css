@@ -72,7 +72,6 @@
     left	: 50% !important;
     top	: min(30vh, 220px) !important;
     transform: translateX(-50%) !important;
-    display: block !important;
     position: fixed !important;
     z-index: 3000 !important;
 }
@@ -143,6 +142,7 @@
 	width	: 30em;
 	height	: 26em;
 	margin	: -13em 0 0 -15em;
+	display: none !important;
 }
 
 #pageLandingContainer .tutorialDialog {

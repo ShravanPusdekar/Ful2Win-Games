@@ -19,12 +19,10 @@ Marble.PageLandingMain	= function()
 	this._pageGameMain	= null;
 
 	jQuery(this._pageSel).show();
-	
-	if( !Detector.webgl && !jQuery.url().param('render') ){
-		this._nowebglShow();		
-	}else{
-		this._menuShow();		
-	}
+	// Ensure 'No WebGL' dialog is hidden; we want the menu by default
+	jQuery(this._pageSel+' .nowebglDialog').hide();
+
+	this._menuShow();
 	this._chromeWebStoreCtor();
 
 	jQuery(this._pageSel+" .menuDialog .button.play").addClass('disable');
@@ -33,6 +31,11 @@ Marble.PageLandingMain	= function()
 	this._$tutorialButtonClick	= this._tutorialShow.bind(this);
 	jQuery(this._pageSel+" .menuDialog .button.play").bind('click'		, this._$playButtonClick);
 	jQuery(this._pageSel+" .menuDialog .button.tutorial").bind('click'	, this._$tutorialButtonClick);
+
+	// Fallback: ensure Play is enabled shortly after load even if preloader event didn't fire
+	setTimeout(function(){
+		jQuery(this._pageSel+" .menuDialog .button.play").removeClass('disable');
+	}.bind(this), 500);
 
 	// adjust instructions for mobile vs desktop controls
 	this._updateControlsInstructions();
@@ -81,6 +84,8 @@ Marble.PageLandingMain.prototype._menuShow	= function()
 {
 	var dialogSel	= this._pageSel+' .menuDialog';
 	var $dlg = jQuery(dialogSel);
+	// Always hide the 'No WebGL' dialog if it was accidentally visible
+	jQuery(this._pageSel+' .nowebglDialog').hide();
 	// Try jqModal first
 	try{
 		if (typeof $dlg.jqm === 'function') {

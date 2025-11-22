@@ -69,17 +69,20 @@ Marble.PageGameLife.prototype._init	= function(){
 	// create the container element
 	var container = jQuery(this._containerSel).get(0);
 
-	// init the WebGL renderer and append it to the Dom
-	var supportWebGL= Detector.webgl ? true : false;
-	var useWebGL	= supportWebGL;
-	useWebGL	= jQuery.url().param('render') ? false : useWebGL;
-	if( useWebGL ){
+	// init the renderer and append it to the DOM
+	// Prefer WebGL; do NOT use CanvasRenderer (not bundled here)
+	if (THREE && THREE.WebGLRenderer) {
 		renderer = new THREE.WebGLRenderer({
-			antialias		: true,
-			preserveDrawingBuffer	: true 
-		});		
-	}else{
-		renderer	= new THREE.CanvasRenderer();
+			antialias: true,
+			preserveDrawingBuffer: true
+		});
+	} else if (THREE && THREE.CanvasRenderer) {
+		// very old fallback if CanvasRenderer exists
+		renderer = new THREE.CanvasRenderer();
+	} else {
+		// last-resort no-op renderer to avoid hard crash; game won't render without WebGL
+		var noop = function(){};
+		renderer = { domElement: document.createElement('canvas'), setSize: noop, render: noop, context: { depthMask: noop } };
 	}
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	container.appendChild( renderer.domElement );
