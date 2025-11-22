@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EKG Runner</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<style type="text/css">
+		html,body {
+			background-color: #000;
+			color: #3cf3af;
+			font-family: helvetica, arial, sans-serif;
+			margin: 0;
+			padding: 0;
+			font-size: 12pt;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+	    #frame{
+	      text-align: center;
+	    }
+	    #canvas{
+	      position: relative;
+	      width: 100%;
+	      max-width: 960px;
+	      height: auto;
+	      margin: 20px auto 0;
+	      display: block;
+	      z-index: 0;
+	    }
+	    #mobile-controls{
+	      position: fixed;
+	      left: 0;
+	      right: 0;
+	      bottom: 10px;
+	      display: none;
+	      justify-content: center;
+	      gap: 12px;
+	      z-index: 2;
+	    }
+	    #mobile-controls button{
+	      background-color: #003322;
+	      color: #3cf3af;
+	      border: 2px solid #3cf3af;
+	      border-radius: 6px;
+	      padding: 10px 14px;
+	      font-size: 14px;
+	      min-width: 70px;
+	    }
+	    #countdown-timer{
+	      position: fixed;
+	      top: 10px;
+	      left: 10px;
+	      color: #3cf3af;
+	      font-size: 24px;
+	      z-index: 3;
+	    }
+	    #game-timer{
+	      position: fixed;
+	      top: 10px;
+	      right: 10px;
+	      color: #3cf3af;
+	      font-size: 24px;
+	      z-index: 3;
+	      display: none;
+	    }
+	    #joystick{
+	      width: 110px;
+	      height: 110px;
+	      border-radius: 50%;
+	      margin-right: 8px;
+	      display: none;
+	      border: 2px solid #3cf3af;
+	      box-shadow: 0 0 10px rgba(60,243,175,0.4);
+	      background: radial-gradient(circle at 30% 30%, rgba(60,243,175,0.35), rgba(0,0,0,0.9));
+	      position: relative;
+	    }
+	    #joystick .knob{
+	      position: absolute;
+	      left: 50%;
+	      top: 50%;
+	      width: 46px;
+	      height: 46px;
+	      margin-left: -23px;
+	      margin-top: -23px;
+	      border-radius: 50%;
+	      background-color: rgba(0,0,0,0.9);
+	      border: 2px solid #3cf3af;
+	      box-shadow: 0 0 6px rgba(60,243,175,0.7);
+	    }
+	    .desktop-only{
+	      display: inline;
+	    }
+	    .mobile-only{
+	      display: none;
+	    }
+	    @media (max-width: 768px){
+	      html, body{
+	        height: 100vh;
+	        overflow: hidden;
+	        touch-action: none;
+	        overscroll-behavior: contain;
+	      }
+	      #mobile-controls{
+	        display: flex;
+	      }
+	      #joystick{
+	        display: block;
+	      }
+	      #btn-left,
+	      #btn-right{
+	        display: none;
+	      }
+	      .desktop-only{
+	        display: none;
+	      }
+	      .mobile-only{
+	        display: inline;
+	      }
+	    }
+	    .progress{
+	      color: #196D4E;
+	      display: none;
+	      width: 100%;
+	      max-width: 640px;
+	      margin: 10px auto 0;
+	      left: 50%;
+	      transform: translateX(-50%);
+	      position: relative;
+	      border: 3px solid #3cf3af;
+	      height: 43px;
+	      text-align: center;
+	      font-size: 24px;
+	      line-height: 43px;
+	    }
+	    .checkpoint1, .checkpoint2{
+	      background-color: #3cf3af;
+	      position: absolute;
+	      height: 100%;
+	      width: 5px;
+	    }
+	    .status{
+	      display: block;
+	      background-color:#3cf3af;
+	      height: 43px;
+	      top: 0;
+	      width: 0%;
+	      position: absolute;
+	      z-index: 3;
+	    }
+	    .display{
+	      z-index: 5;
+	      position: relative;
+	    }
+	    .maxScore{
+	      display: block;
+	      background-color: #3cf3af;
+	      opacity: .3;
+	      height: 43px;
+	      top: 0;
+	      width: 0%;
+	      position: absolute;
+	      z-index: 2;
+	    }
+	    .win, .death, .intro{
+	      width: 100%;
+	      max-width: 960px;
+	      margin-left: 0;
+	      left: 50%;
+	      top: 50%;
+	      transform: translate(-50%, -50%);
+	      font-size: 50px;
+	      text-align: center;
+	      position: fixed;
+	      height: auto;
+	      min-height: 0;
+	      display: none;
+	      background-color: rgba(0,0,0,.5);
+	      z-index: 1;
+	    }
+	    .overlay-inner{
+	      padding: 20px;
+	    }
+	    .intro{
+	      background-color: rgba(0,0,0,.9);
+	    }
+	    .intro h1{
+	      font-size: 50px;
+	    }
+	    .intro small{
+	      font-size: 25px;
+	      font-style: italic;
+	    }
+	    small{
+	      font-size: 25px;
+	      font-style: italic;
+	    }
+	    .credits{
+	      position: absolute;
+	      bottom: 10px;
+	      text-align: center;
+	      width: 100%;
+	    }
+	    a{
+	      color: white;
+	    }
+	    a:visited{
+	      color: white;
+	    }
+	</style>
+
+
+  <script src="libraries/lowLag.js"></script>
+  <script src="libraries/sm2/js/soundmanager2.js"></script>
+  <script src="libraries/jquery.js"></script>
+
+
+
+	<!--<script type="text/javascript" src="lib/impact/impact.js"></script>-->
+  <!--<script type="text/javascript" src="lib/drop.js"></script>-->
+  <script type="text/javascript" src="game.min.js"></script>
+
+
+</head>
+<body>
+	<div id="frame">
+	    <div class="intro">
+	      <div class="overlay-inner">
+	        <h1>EKG Runner<br><small>Run for your life.... (groan)</small></h1>
+	        <small class="desktop-only">Left/Right to move, Up/Space to jump</small>
+	        <small class="mobile-only">Use the on-screen buttons to move and jump</small>
+	        <br>
+	        <small class="desktop-only">Press Enter to start</small>
+	        <small class="mobile-only">Tap Start to begin</small>
+	      </div>
+	    </div>
+	    <div class="win">
+	      <div class="overlay-inner">
+	        YOU WIN!
+	        <br>
+	        <br>
+	        <small>
+	          Total Time Played: <span class="totalTime"></span>
+	          <br>
+	          Score: <span class="score"></span>
+	        </small>
+	      </div>
+	    </div>
+	    <div class="death">
+	      <div class="overlay-inner">
+	        You Died.
+	        <br>
+	        <small>
+	          Total Time Played: <span class="totalTime"></span>
+	          <br>
+	          Score: <span class="score"></span>
+	        </small>
+	      </div>
+	    </div>
+    <div class="progress">
+      <div class="checkpoint1"></div>
+      <div class="checkpoint2"></div>
+      <div class="display"></div>
+      <div class="status"></div>
+      <div class="maxScore"></div>
+      <img src="media/progress.png">
+    </div>
+		<canvas id="canvas"></canvas>
+  	</div>
+	  <div id="mobile-controls">
+	    <div id="joystick"><div class="knob"></div></div>
+	    <button id="btn-left">Left</button>
+	    <button id="btn-right">Right</button>
+	    <button id="btn-start">Start</button>
+	  </div>
+	  <div id="countdown-timer">5</div>
+	  <div id="game-timer">120</div>
+
+	  <script>
+	  (function(){
+	    if (window.parent === window) {
+	      window.addEventListener('load', function(){
+	        if (window.ig && ig.music) {
+	          ig.music.volume = 0;
+	        }
+	        if (window.soundManager && soundManager.mute) {
+	          soundManager.mute();
+	        }
+	      });
+	    }
+	    function setupJoystick(){
+	      var joy = document.getElementById('joystick');
+	      if (!joy || !window.ig || !ig.input) { return; }
+	      var knob = joy.querySelector('.knob');
+	      var radius = joy.offsetWidth / 2;
+	      var maxOffset = radius - (knob ? knob.offsetWidth / 2 : 0) - 2;
+	      function setState(dir, jump){
+	        ig.input.actions.left  = (dir === 'left');
+	        ig.input.actions.right = (dir === 'right');
+	        if (jump) {
+	          ig.input.actions.jump = true;
+	          ig.input.presses = ig.input.presses || {};
+	          ig.input.presses.jump = true;
+	        }
+	      }
+	      function clearState(){
+	        ig.input.actions.left = false;
+	        ig.input.actions.right = false;
+	        ig.input.actions.jump = false;
+	        if (knob) {
+	          knob.style.transform = 'translate(0, 0)';
+	        }
+	      }
+	      function handle(e){
+	        var t = e.touches ? e.touches[0] : e;
+	        var r = joy.getBoundingClientRect();
+	        var x = t.clientX - r.left - r.width / 2;
+	        var y = t.clientY - r.top - r.height / 2;
+	        var dir = x < 0 ? 'left' : 'right';
+	        var jump = (y < -r.height * 0.2); // upper area triggers jump
+	        setState(dir, jump);
+	        if (knob) {
+	          var dist = Math.sqrt(x * x + y * y) || 1;
+	          var scale = Math.min(maxOffset / dist, 1);
+	          var kx = x * scale;
+	          var ky = y * scale;
+	          knob.style.transform = 'translate(' + kx + 'px, ' + ky + 'px)';
+	        }
+	        if (e.cancelable) e.preventDefault();
+	      }
+	      joy.addEventListener('touchstart', handle, { passive: false });
+	      joy.addEventListener('touchmove', handle, { passive: false });
+	      joy.addEventListener('touchend', function(e){ clearState(); if (e.cancelable) e.preventDefault(); }, { passive: false });
+	    }
+	    function setupCountdown(){
+	      var el = document.getElementById('countdown-timer');
+	      if (!el) return;
+	      var remaining = 5;
+	      el.textContent = remaining;
+	      var interval = setInterval(function(){
+	        if (!window.showCover) {
+	          el.style.display = 'none';
+	          clearInterval(interval);
+	          return;
+	        }
+	        remaining--;
+	        if (remaining <= 0) {
+	          remaining = 0;
+	          el.textContent = remaining;
+	          clearInterval(interval);
+	          el.style.display = 'none';
+	          if (window.ig && ig.input) {
+	            ig.input.presses = ig.input.presses || {};
+	            ig.input.actions = ig.input.actions || {};
+	            ig.input.presses.ok = true;
+	            ig.input.actions.ok = true;
+	          }
+	        } else {
+	          el.textContent = remaining;
+	        }
+	      },1000);
+	    }
+	    function setupGameTimer(){
+	      var el = document.getElementById('game-timer');
+	      if (!el) return;
+	      var total = 120;
+	      var started = false;
+	      var interval = setInterval(function(){
+	        if (!window.ig || !window.game) {
+	          return;
+	        }
+	        if (window.showCover) {
+	          el.style.display = 'none';
+	          return;
+	        }
+	        if (!started) {
+	          started = true;
+	          el.style.display = 'block';
+	          el.textContent = total;
+	          return;
+	        }
+	        if (window.gameOver) {
+	          el.style.display = 'none';
+	          clearInterval(interval);
+	          return;
+	        }
+	        total--;
+	        if (total <= 0) {
+	          total = 0;
+	          el.textContent = total;
+	          clearInterval(interval);
+	        } else {
+	          el.textContent = total;
+	        }
+	      },1000);
+	    }
+	    if (document.readyState === 'complete') {
+	      setupJoystick();
+	      setupCountdown();
+	      setupGameTimer();
+	    } else {
+	      window.addEventListener('load', function(){
+	        setupJoystick();
+	        setupCountdown();
+	        setupGameTimer();
+	      });
+	    }
+	  })();
+	  </script>
+	</body>
+	</html>
