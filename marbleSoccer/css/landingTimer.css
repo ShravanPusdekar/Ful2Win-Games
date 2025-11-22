@@ -1,0 +1,11 @@
+#landingCountdown {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	z-index: 20;
+	font-family: arial, sans-serif;
+	font-size: 22px;
+	font-weight: bold;
+	color: #ffffff;
+	text-shadow: 0 0 4px #000;
+}
