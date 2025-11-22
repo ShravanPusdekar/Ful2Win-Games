@@ -80,7 +80,7 @@
 		<!-- *****************************************************************************
 			LandingContainer
 		******************************************************************************** -->
-		<div id="pageLandingContainer" style="display: none;"><div class="subContainer">
+		<div id="pageLandingContainer"><div class="subContainer">
 			<div id="landingCountdown"></div>
 			<div class="pageTitle">
 				<a href="http://learningthreejs.com/blog/categories/tutorial3dgame/" target='_blank'>Marble Soccer</a>
@@ -217,20 +217,30 @@
 		<script>
 			jQuery(function(){
 				// TODO use the threex.embedded for that
-				
 				// prevent default actions for arrow keys
 				// - required if this window.document is embedded in another page as an iframe
-				// - it prevent the hosting page to scroll when you use arrows in the game page
+				// - it prevents the hosting page to scroll when you use arrows in the game page
 				document.addEventListener('keydown', function(event){
-					var isArrow	= event.keyCode >= 37 && event.keyCode <= 40;
+					var isArrow = event.keyCode >= 37 && event.keyCode <= 40;
 					if( !isArrow )	return;
 					event.preventDefault();
 				}, true);
 
-				new Marble.PageLandingMain();				
-			})
+				new Marble.PageLandingMain();
 
+				// Failsafe: ensure the landing menu dialog is visible even if jqModal fails
+				setTimeout(function(){
+					var dlg = jQuery('#pageLandingContainer .menuDialog');
+					if(dlg.length){
+						var el = dlg.get(0);
+						if (el && el.style && el.style.setProperty) {
+							el.style.setProperty('display', 'block', 'important');
+						}
+						dlg.css({position:'fixed', zIndex:3000, left:'50%', transform:'translateX(-50%)'});
+					}
+				}, 100);
+			});
 		</script>
-	</body>
+</body>
 </body>
 </html>

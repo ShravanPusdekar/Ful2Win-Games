@@ -80,8 +80,20 @@ Marble.PageLandingMain.prototype.destroy	= function()
 Marble.PageLandingMain.prototype._menuShow	= function()
 {
 	var dialogSel	= this._pageSel+' .menuDialog';
-	jQuery(dialogSel).jqm( {overlay : 0} );
-	jQuery(dialogSel).jqmShow();
+	var $dlg = jQuery(dialogSel);
+	// Try jqModal first
+	try{
+		if (typeof $dlg.jqm === 'function') {
+			$dlg.jqm({ overlay: 0 });
+			if (typeof $dlg.jqmShow === 'function') $dlg.jqmShow();
+		}
+	}catch(e){}
+	// Ensure visible even if jqModal is missing/broken
+	$dlg.css({ position: 'fixed', zIndex: 3000, left: '50%', top: '50%' });
+	var el = $dlg.get(0);
+	if (el && el.style && el.style.setProperty) {
+		el.style.setProperty('display', 'block', 'important');
+	}
 }
 
 Marble.PageLandingMain.prototype._startAutoStartCountdown = function(seconds)
@@ -150,8 +162,20 @@ Marble.PageLandingMain.prototype._nowebglShow	= function()
 	var youtubeHtml	= '<iframe width="560" height="315" src="'+youtubeUrl+'" frameborder="0" allowfullscreen></iframe>';
 	jQuery(dialogSel+ ' .youtube').html(youtubeHtml);
 	
-	jQuery(dialogSel).jqm( {overlay : 0} );
-	jQuery(dialogSel).jqmShow();
+	try{
+		var $dlg = jQuery(dialogSel);
+		if (typeof $dlg.jqm === 'function') {
+			$dlg.jqm({ overlay: 0 });
+			if (typeof $dlg.jqmShow === 'function') $dlg.jqmShow();
+		}
+	}catch(e){}
+	// Ensure visible even if jqModal missing/broken
+	var $dlg2 = jQuery(dialogSel);
+	$dlg2.css({ position: 'fixed', zIndex: 3000, left: '50%', top: '50%' });
+	var el = $dlg2.get(0);
+	if (el && el.style && el.style.setProperty) {
+		el.style.setProperty('display', 'block', 'important');
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -175,8 +199,14 @@ Marble.PageLandingMain.prototype._playClick	= function()
 Marble.PageLandingMain.prototype._tutorialShow	= function()
 {
 	var dialogSel	= this._pageSel+' .tutorialDialog';
-	jQuery(dialogSel).jqm();
-	jQuery(dialogSel).jqmShow();
+	var $dlg = jQuery(dialogSel);
+	try{
+		if (typeof $dlg.jqm === 'function') {
+			$dlg.jqm();
+			if (typeof $dlg.jqmShow === 'function') $dlg.jqmShow();
+		}
+	}catch(e){}
+	$dlg.css({ display: 'block', position: 'fixed', zIndex: 3000 });
 	// reset auto-start timer to 10 seconds
 	this._startAutoStartCountdown(10);
 }

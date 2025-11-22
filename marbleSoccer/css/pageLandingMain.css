@@ -7,6 +7,7 @@
 	left		: 0px;
 	
 	color		: white;
+	z-index	: 200; /* ensure above canvas and OSD */
 }
 
 #pageLandingContainer .subContainer {
@@ -68,8 +69,12 @@
 /********************************************************************************/
 
 #pageLandingContainer .jqmWindow {
-	left	: 50%;
-	top	: 50%;
+    left	: 50% !important;
+    top	: min(30vh, 220px) !important;
+    transform: translateX(-50%) !important;
+    display: block !important;
+    position: fixed !important;
+    z-index: 3000 !important;
 }
 
 
@@ -90,10 +95,24 @@
 /********************************************************************************/
 
 #pageLandingContainer .menuDialog {
-	width		: 26em;
-	height		: 18em;
-	/* center, but slightly higher so it sits closer to the title */
-	margin		: -12em 0 0 -13em;
+    width       : 26em;
+    height      : auto;
+    /* Guarantee visibility: responsive horizontal centering and safe top offset */
+    margin      : 0;
+    /* Ensure visible even if jqModal plugin is missing */
+    display     : block !important;
+    position    : fixed;
+    z-index     : 3000;
+    /* inherit left/top/transform from .jqmWindow */
+    background-color: #EEE;
+    color       : #333;
+    padding     : 12px;
+    border-radius   : 20px;
+    box-shadow  : 0px 0px 12px black;
+    box-sizing  : border-box;
+    max-width   : 90vw;
+    visibility  : visible !important;
+    opacity     : 1 !important;
 }
 
 #pageLandingContainer .menuDialog div.button {
@@ -130,6 +149,18 @@
 	width	: 20em;
 	height	: 12em;
 	margin	: -6em 0 0 -10em;
+	display	: block !important;
+	position: fixed;
+	left	: 50%;
+	top	: 50%;
+	z-index: 3000;
+	background-color: #EEE;
+	color	: #333;
+	padding	: 12px;
+	border-radius: 20px;
+	box-shadow: 0 0 12px black;
+	box-sizing: border-box;
+	max-width: 90vw;
 }
 
 #pageLandingContainer .aboutDialog {
