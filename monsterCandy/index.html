@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Monster Wants Candy demo</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<style>
+	 html, body { height: 100%; }
+	 body { margin: 0; background: #000; overflow: hidden; overscroll-behavior: none; }
+	 #game { position: fixed; left: 0; top: 0; width: 100vw; height: 100dvh; background: #000; }
+	 canvas { display: block; }
+	</style>
+	<script src="src/phaser-2.0.7.min.js"></script>
+	<script src="src/Boot.js"></script>
+	<script src="src/Preloader.js"></script>
+	<script src="src/MainMenu.js"></script>
+	<script src="src/Game.js"></script>
+</head>
+<body>
+<div id="game"></div>
+<script>
+(function() {
+	// initialize the framework
+	window.game = new Phaser.Game(640, 960, Phaser.AUTO, 'game');
+	// add game states
+	game.state.add('Boot', Candy.Boot);
+	game.state.add('Preloader', Candy.Preloader);
+	game.state.add('MainMenu', Candy.MainMenu);
+	game.state.add('Game', Candy.Game);
+	// start the Boot state
+	game.state.start('Boot');
+
+	function setViewportSize(){
+		var el = document.getElementById('game');
+		var vv = window.visualViewport;
+		var w = vv && vv.width ? vv.width : window.innerWidth;
+		var h = vv && vv.height ? vv.height : window.innerHeight;
+		el.style.width = w + 'px';
+		el.style.height = h + 'px';
+		if (window.game && window.game.scale && window.game.scale.refresh) { window.game.scale.refresh(); }
+	}
+	setViewportSize();
+	window.addEventListener('resize', setViewportSize);
+	window.addEventListener('orientationchange', setViewportSize);
+})();
+</script>
+</body>
+</html>
