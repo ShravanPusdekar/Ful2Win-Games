@@ -143,18 +143,19 @@
 }
 
 #pageLandingContainer .tutorialDialog {
-	width	: 20em;
-	height	: 12em;
-	margin	: -6em 0 0 -10em;
-	display: none;
-	position: fixed;
-	left	: 50%;
-	top	: 50%;
-	z-index: 3000;
-	background-color: #EEE;
-	color	: #333;
-	padding	: 12px;
-	border-radius: 20px;
+    width	: 20em;
+    height	: 12em;
+    margin	: 0 !important;
+    display: none;
+    position: fixed;
+    left	: 50% !important;
+    top	: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 3000;
+    background-color: #EEE;
+    color	: #333;
+    padding	: 12px;
+    border-radius: 20px;
 	box-shadow: 0 0 12px black;
 	box-sizing: border-box;
 	max-width: 90vw;

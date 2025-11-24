@@ -22,7 +22,39 @@ Marble.Camera.prototype.tick	= function()
 	var camera	= this._object;
 	var player	= gameLevel.player();
 
-	camera.position.add( player.mesh().position, this._relativePos);
+	// Cross-version safe vector addition for camera offset
+	var targetPos = new THREE.Vector3();
+	if (typeof targetPos.copy === 'function') {
+		targetPos.copy(player.mesh().position);
+	} else {
+		targetPos.set(player.mesh().position.x, player.mesh().position.y, player.mesh().position.z);
+	}
+	if (typeof targetPos.addVectors === 'function') {
+		// Newer three.js
+		targetPos.addVectors(player.mesh().position, this._relativePos);
+	} else if (typeof targetPos.add === 'function') {
+		// Older API: add(v) or add(a,b)
+		if (targetPos.add.length >= 2) {
+			// add(a,b) signature
+			targetPos.add(player.mesh().position, this._relativePos);
+		} else {
+			// add(v) signature; already copied player pos
+			targetPos.add(this._relativePos);
+		}
+	} else if (typeof targetPos.addSelf === 'function') {
+		// Very old API
+		targetPos.addSelf(this._relativePos);
+	} else {
+		// Fallback manual sum
+		targetPos.x = player.mesh().position.x + this._relativePos.x;
+		targetPos.y = player.mesh().position.y + this._relativePos.y;
+		targetPos.z = player.mesh().position.z + this._relativePos.z;
+	}
+	if (typeof camera.position.copy === 'function') {
+		camera.position.copy(targetPos);
+	} else {
+		camera.position = targetPos;
+	}
 	camera.lookAt( player.mesh().position );
 
 	if( player.fpsControl().isActivated() ){
