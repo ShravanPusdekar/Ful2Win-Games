@@ -71,7 +71,10 @@ Marble.PageLandingMain.prototype.destroy	= function()
 		this._autoStartTimerId = null;
 	}
 
-	jQuery(this._pageSel).hide();
+    // Hide landing and any dialogs/overlays
+    jQuery(this._pageSel+' .jqmWindow').hide();
+    jQuery('.jqmOverlay').remove();
+    jQuery(this._pageSel).hide();
 	jQuery(this._pageSel+" .menuDialog .button.play").unbind('click'	, this._$playButtonClick);
 	jQuery(this._pageSel+" .menuDialog .button.tutorial").unbind('click'	, this._$tutorialButtonClick);
 }
@@ -82,10 +85,14 @@ Marble.PageLandingMain.prototype.destroy	= function()
 
 Marble.PageLandingMain.prototype._menuShow	= function()
 {
-	var dialogSel	= this._pageSel+' .menuDialog';
-	var $dlg = jQuery(dialogSel);
-	// Always hide the 'No WebGL' dialog if it was accidentally visible
-	jQuery(this._pageSel+' .nowebglDialog').hide();
+    var dialogSel	= this._pageSel+' .menuDialog';
+    var $dlg = jQuery(dialogSel);
+    // Always hide the 'No WebGL' dialog if it was accidentally visible
+    jQuery(this._pageSel+' .nowebglDialog').hide();
+    // Hide tutorial if it was left opened by a previous session
+    jQuery(this._pageSel+' .tutorialDialog').hide();
+    // Remove any existing jqModal overlays
+    jQuery('.jqmOverlay').remove();
 	// Try jqModal first
 	try{
 		if (typeof $dlg.jqm === 'function') {
@@ -119,11 +126,25 @@ Marble.PageLandingMain.prototype._startAutoStartCountdown = function(seconds)
 			self._autoStartTimerId = null;
 			// if game not started yet, start it
 			if( !self._pageGameMain ){
-				// hide any open tutorial dialog and its jqModal overlay
-				var dialogSel = self._pageSel+' .tutorialDialog';
+				// hide any open tutorial/menu dialogs and their jqModal overlay
+				var tSel = self._pageSel+' .tutorialDialog';
+				var mSel = self._pageSel+' .menuDialog';
 				try {
-					jQuery(dialogSel).jqmHide && jQuery(dialogSel).jqmHide();
+					jQuery(tSel).jqmHide && jQuery(tSel).jqmHide();
+					jQuery(mSel).jqmHide && jQuery(mSel).jqmHide();
 				} catch(e){}
+				// Force override any prior "display: block !important" applied in _menuShow
+				jQuery([tSel, mSel].join(',')).each(function(){
+					var el = this;
+					if (el && el.style && el.style.setProperty) {
+						el.style.setProperty('display', 'none', 'important');
+						el.style.setProperty('visibility', 'hidden', 'important');
+					}
+				});
+				// Remove any modal overlay left behind
+				jQuery('.jqmOverlay').remove();
+				// Clear countdown text
+				jQuery('#landingCountdown').text('');
 				self._pageGameMainCtor();
 			}
 		}
@@ -309,13 +330,29 @@ Marble.PageLandingMain.prototype._chromeWebStoreDtor	= function()
 Marble.PageLandingMain.prototype._pageGameMainCtor	= function()
 {
 	console.assert( !this._pageGameMain );
+    
+    // Hide landing and any dialogs/overlays
+	jQuery(this._pageSel+' .jqmWindow').hide();
+	jQuery('.jqmOverlay').remove();
+	jQuery(this._pageSel).hide();
+	// Force-hide in case they were shown with "display: block !important"
+	var $wins = jQuery(this._pageSel+' .jqmWindow');
+	$wins.each(function(){
+		var el = this;
+		if (el && el.style && el.style.setProperty) {
+			el.style.setProperty('display', 'none', 'important');
+			el.style.setProperty('visibility', 'hidden', 'important');
+		}
+	});
+	var landingEl = jQuery(this._pageSel).get(0);
+	if (landingEl && landingEl.style && landingEl.style.setProperty) {
+		landingEl.style.setProperty('display', 'none', 'important');
+	}
 	
 	this._pageGameMain	= new Marble.PageGameMain();
 
 	this._$pageGameMainOnCompleted	= this._pageGameMainOnCompleted.bind(this);
 	this._pageGameMain.bind('completed', this._$pageGameMainOnCompleted);
-
-	jQuery(this._pageSel).hide();
 
 	// export as a global
 	pageGameMain	= this._pageGameMain;

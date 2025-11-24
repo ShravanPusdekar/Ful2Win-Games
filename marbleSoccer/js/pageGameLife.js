@@ -137,7 +137,12 @@ Marble.PageGameLife.prototype._render = function()
 	gameLevel.tick();
 	
 	// FIXME this should be INSIDE webgl renderer... bug
-	renderer instanceof THREE.WebGLRenderer	&& renderer.context.depthMask( true );
+	if (renderer && (renderer instanceof THREE.WebGLRenderer)) {
+		var gl = renderer.context || renderer.gl;
+		if (gl && typeof gl.depthMask === 'function') {
+			gl.depthMask(true);
+		}
+	}
 
 	// actually display the scene in the Dom element
 	renderer.render( scene, gameLevel.camera().object() );
