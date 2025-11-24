@@ -142,7 +142,7 @@ Marble.Map.prototype._buildMesh	= function()
 {
 	var geometry	= new THREE.Geometry();
 	this._voxels	= [];
-	var mergeWorked = true;
+	var mergeWorked = false;
 	try{
 		this._voxelMap.map().forEach(function(mapVoxel){
 			var voxel	= new Marble.Voxel({ type: mapVoxel.t });

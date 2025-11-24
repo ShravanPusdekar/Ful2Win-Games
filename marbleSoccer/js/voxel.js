@@ -33,8 +33,9 @@ Marble.Voxel	= function(opts)
 		}
 	});
 
-	var geometry	= new THREE.CubeGeometry( tileSize, tileSize, tileSize, 1, 1, 1, [material, material, material, material, material, material ]);
-	this._mesh	= new THREE.Mesh( geometry, new THREE.MeshFaceMaterial() );
+	var geometry	= new THREE.CubeGeometry( tileSize, tileSize, tileSize, 1, 1, 1, [material, material, material, material, material, material ] );
+    // Use the resolved material directly to avoid MeshFaceMaterial dependency on geometry.materials
+    this._mesh	= new THREE.Mesh( geometry, material );
 }
 
 Marble.Voxel._type2colors	= [

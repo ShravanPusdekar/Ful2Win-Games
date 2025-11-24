@@ -55,6 +55,10 @@ Marble.PageGameLife.prototype.triggerEndOfLevel	= function(result, reason)
 	if( result === 'dead' && reason === 'timeout'){
 		this._showEndOverlay(result, reason);
 	}
+	// Ensure a clear color (some CanvasRenderer builds need explicit clear)
+	if (typeof renderer.setClearColor === 'function') {
+		renderer.setClearColor(0x000000, 1);
+	}
 	else if( result === 'dead' ){
 		// keep original behaviour for life lost: let PageGameMain handle respawn
 		this.trigger('completed', reason);
@@ -77,6 +81,14 @@ Marble.PageGameLife.prototype._init	= function(){
 				antialias: true,
 				preserveDrawingBuffer: true
 			});
+			// If WebGL context didn't initialize, switch to CanvasRenderer
+			if (!renderer || !renderer.context) {
+				if (THREE && THREE.CanvasRenderer) {
+					renderer = new THREE.CanvasRenderer();
+				} else {
+					throw new Error('WebGL context unavailable and no CanvasRenderer');
+				}
+			}
 		} else if (THREE && THREE.CanvasRenderer) {
 			// very old fallback if CanvasRenderer exists
 			renderer = new THREE.CanvasRenderer();
