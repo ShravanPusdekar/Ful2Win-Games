@@ -141,6 +141,59 @@
 		<script>if(!window.THREE){document.write('<script src="vendor/sparks.js/examples/js/Three.js"><\\/script>');}</script>
 		<script src="vendor/three-r46.js/examples/js/Detector.js"></script>
 		<script src="vendor/three-r46.js/examples/js/Stats.js"></script>
+		<!-- Needed for THREEx.SkyMap on old THREE builds -->
+		<script src="vendor/sparks.js/examples/js/ShaderExtras.js"></script>
+		<script>
+		// Cross-version THREE.js compatibility polyfills
+		(function(){
+		  if (!window.THREE) return;
+		  var SP = THREE.Scene && THREE.Scene.prototype;
+		  if (SP) {
+		    if (!SP.add && SP.addObject) SP.add = SP.addObject;
+		    if (!SP.remove && SP.removeObject) SP.remove = SP.removeObject;
+		  }
+		  var OP = THREE.Object3D && THREE.Object3D.prototype;
+		  if (OP) {
+		    if (!OP.add && OP.addChild) OP.add = OP.addChild;
+		    if (!OP.remove && OP.removeChild) OP.remove = OP.removeChild;
+		  }
+		  var VP = THREE.Vector3 && THREE.Vector3.prototype;
+		  if (VP && !VP.addVectors) {
+		    VP.addVectors = function(a, b){
+		      if (typeof this.copy === 'function') this.copy(a); else this.set(a.x,a.y,a.z);
+		      if (typeof this.add === 'function') {
+		        if (this.add.length >= 2) this.add(a, b); else this.add(b);
+		      } else if (typeof this.addSelf === 'function') {
+		        this.addSelf(b);
+		      } else {
+		        this.x = a.x + b.x; this.y = a.y + b.y; this.z = a.z + b.z;
+		      }
+		      return this;
+		    };
+		  }
+		  // GeometryUtils.merge polyfill (used by map builder)
+		  if (!THREE.GeometryUtils) THREE.GeometryUtils = {};
+		  if (!THREE.GeometryUtils.merge) {
+		    THREE.GeometryUtils.merge = function(geometry, mesh){
+		      if (!geometry || !mesh) return geometry;
+		      var g = mesh.geometry || mesh;
+		      var m = mesh.matrix || (mesh.matrixWorld || new THREE.Matrix4());
+		      if (geometry.merge) {
+		        // modern signature
+		        try { geometry.merge(g, m); } catch(e) { try { geometry.merge(g); } catch(e2){} }
+		      } else {
+		        // as a last resort, just assign to avoid crashing
+		        geometry = g;
+		      }
+		      return geometry;
+		    };
+		  }
+		  // MeshFaceMaterial backward compat
+		  if (THREE.MeshFaceMaterial && typeof THREE.MeshFaceMaterial === 'function' && !THREE.MultiMaterial) {
+		    // no-op, keep as-is; this is the old type our code uses
+		  }
+		})();
+		</script>
 
 		<script src='vendor/es5-shim/es5-shim.min.js'></script>
 

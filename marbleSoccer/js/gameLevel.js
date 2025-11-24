@@ -15,7 +15,13 @@ Marble.GameLevel	= function()
 	this._player	= new Marble.Player();
 	this._map	= new Marble.Map();
 	this._camera	= new Marble.Camera();
-	this._skybox	= new Marble.Skymap();
+	// Build skybox defensively; if shaders aren't available, skip it so gameplay still works
+	try{
+		this._skybox	= new Marble.Skymap();
+	}catch(e){
+		this._skybox = null;
+		if (window && window.console) console.warn('Skybox init failed, continuing without it:', e);
+	}
 
 	// create all the balls
 	this._balls	= [];

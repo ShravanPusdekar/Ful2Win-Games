@@ -142,29 +142,48 @@ Marble.Map.prototype._buildMesh	= function()
 {
 	var geometry	= new THREE.Geometry();
 	this._voxels	= [];
-	this._voxelMap.map().forEach(function(mapVoxel){
-		var voxel	= new Marble.Voxel({
-			type	: mapVoxel.t
-		});
-		var mesh	= voxel.mesh();
-		mesh.position.x	= mapVoxel.x * Marble.tileSize;
-		mesh.position.y	= mapVoxel.y * Marble.tileSize - Marble.tileSize/2;
-		mesh.position.z	= mapVoxel.z * Marble.tileSize;
+	var mergeWorked = true;
+	try{
+		this._voxelMap.map().forEach(function(mapVoxel){
+			var voxel	= new Marble.Voxel({ type: mapVoxel.t });
+			var mesh	= voxel.mesh();
+			mesh.position.x	= mapVoxel.x * Marble.tileSize;
+			mesh.position.y	= mapVoxel.y * Marble.tileSize - Marble.tileSize/2;
+			mesh.position.z	= mapVoxel.z * Marble.tileSize;
+			mesh.matrixAutoUpdate = false;
+			mesh.updateMatrix();
+			this._voxels.push( voxel );
+			// merge all the geometries (may fail on some old THREE builds)
+			THREE.GeometryUtils.merge( geometry, mesh );
+		}.bind(this));
+	}catch(e){
+		mergeWorked = false;
+	}
+
+	if (mergeWorked && geometry && geometry.faces && geometry.faces.length){
+		// build the THREE.Mesh itself from merged geometry
+		var mesh	= new THREE.Mesh( geometry, new THREE.MeshFaceMaterial() );
 		mesh.matrixAutoUpdate = false;
 		mesh.updateMatrix();
-		
-		this._voxels.push( voxel );
-
-		// merge all the geometries
-		THREE.GeometryUtils.merge( geometry, mesh );		
-	}.bind(this));
-
-	// build the THREE.Mesh itself
-	var mesh	= new THREE.Mesh( geometry, new THREE.MeshFaceMaterial() );
-	mesh.matrixAutoUpdate = false;
-	mesh.updateMatrix();
-	
-	this._mesh	= mesh;
+		this._mesh	= mesh;
+	}else{
+		// Fallback: build as a group of individual voxel meshes
+		var group = new THREE.Object3D();
+		// rebuild voxels to ensure meshes are added
+		this._voxels = [];
+		this._voxelMap.map().forEach(function(mapVoxel){
+			var voxel	= new Marble.Voxel({ type: mapVoxel.t });
+			var mesh	= voxel.mesh();
+			mesh.position.x	= mapVoxel.x * Marble.tileSize;
+			mesh.position.y	= mapVoxel.y * Marble.tileSize - Marble.tileSize/2;
+			mesh.position.z	= mapVoxel.z * Marble.tileSize;
+			mesh.matrixAutoUpdate = false;
+			mesh.updateMatrix();
+			this._voxels.push( voxel );
+			if (typeof group.add === 'function') group.add(mesh); else if (typeof group.addChild === 'function') group.addChild(mesh);
+		}.bind(this));
+		this._mesh = group;
+	}
 }
 
 
